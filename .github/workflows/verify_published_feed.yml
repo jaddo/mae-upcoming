@@ -3,8 +3,8 @@ name: Verify Published Feed
 # Watchdog for the gap that let the site go stale unnoticed: the pipeline job
 # died before its Pages steps, so those steps were *skipped* rather than failed
 # and nothing reported a problem. A check living inside that job would have been
-# skipped too, so this runs on its own schedule and reports on what
-# upcoming.orfe.princeton.edu actually serves, whatever the pipeline did.
+# skipped too, so this runs on its own schedule and reports on what the
+# published site actually serves, whatever the pipeline did.
 
 on:
   schedule:
@@ -37,8 +37,10 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
-      SITE_BASE_URL: https://upcoming.orfe.princeton.edu
-      ICS_URL: ${{ vars.ICS_URL }}
+      # Defaults to the github.io URL. Set the SITE_BASE_URL repo variable once
+      # upcoming.mae.princeton.edu exists in DNS and PAGES_CNAME is set.
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'https://pu-shd.github.io/mae-upcoming' }}
+      ICS_URL: ${{ vars.ICS_URL || 'https://mae.princeton.edu/feeds/events/ical.ics' }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v7
@@ -61,10 +63,8 @@ jobs:
             --base-url "${SITE_BASE_URL}" \
             --repo "${GITHUB_REPOSITORY}" \
             --check "events.json=latest:events.json" \
-            --check "events-newsletter.json=latest:events-newsletter.json" \
             --check "dev/events.json=dev:events.json" \
             --check "dev/events-nofpo.json=dev:events-nofpo.json" \
-            --check "dev/events-newsletter.json=dev:events-newsletter.json" \
             --attempts "${{ github.event.inputs.attempts || '3' }}" \
             --interval 30 \
             --grace-minutes "${{ github.event.inputs.grace_minutes || '20' }}" \

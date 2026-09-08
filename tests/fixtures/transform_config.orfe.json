@@ -1,0 +1,30 @@
+{
+  "_comment": "The ORFE-shaped mapping this pipeline was originally written against: the speaker sits in the ICS SUMMARY, the title is scraped from the event page, LOCATION reads '101 - Sherrerd Hall', and commas in the SUMMARY-derived field are re-escaped for the downstream ingester. Kept so the machinery tests (windowing, provenance, schema) exercise a shape that is not MAE's, and so the dash/escape code paths stay covered. MAE's live mapping is transform_config.json at the repo root.",
+
+  "target_timezone": "America/New_York",
+  "time_format": "YYYY-MM-DDTHH:mm:ss",
+
+  "field_mappings": {
+    "uid": "guid",
+    "begin": "startTime",
+    "end": "endTime",
+    "url": "urlRef",
+    "categories": "series",
+    "description": "content",
+    "name": "speaker"
+  },
+
+  "masked_fields": ["dtstamp", "sequence", "transp", "class"],
+
+  "placeholders": {
+    "title": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement"
+  },
+
+  "copies": {},
+
+  "location_strategy": "dash",
+  "escape_name_commas": true
+}

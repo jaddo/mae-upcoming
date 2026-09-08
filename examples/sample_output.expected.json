@@ -1,232 +1,178 @@
 [
   {
-    "guid": "ps_events:11876:delta:0",
-    "startTime": "2025-09-08T12:15:00",
-    "endTime": "2025-09-08T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/elynn-chen-new-york-university",
+    "guid": "ps_events:4741:delta:0",
+    "startTime": "2026-08-24T09:00:00",
+    "endTime": "2026-08-24T11:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/influence-surfactants-air-liquid-air-sheets-and-bubble-bursting",
+    "series": "Final Public Oral Exam",
+    "title": "The influence of surfactants on air-liquid-air sheets and bubble bursting",
     "location": {
-      "name": "Sherrerd",
+      "name": "Engineering Quad J Wing",
       "id": "",
-      "detail": "101"
+      "detail": "J223"
     },
-    "speaker": "Elynn Chen\\, New York University",
-    "content": "Abstract: Most learning-and-decision systems assume a single\\, \rhomogeneous response to actions. In practice—marketing\\, healthcare\\, operations—outcomes vary across unobserved segments. This talk develops adata-driven framework for decision making under latent heterogeneity\\, where each individual belongs to an unknown group and group membership is probabilistic and feature-driven. I will focus on a linear contextual banditmodel with a logistic “gating” rule for membership and group-specificlinear rewards\\, and present an exploration-free\\, phased algorithm that jointly learns the gate and the",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
+  },
+  {
+    "guid": "ps_events:4786:delta:0",
+    "startTime": "2026-08-31T14:00:00",
+    "endTime": "2026-08-31T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/winds-waves-and-wakes-investigating-impact-ocean-waves-large-eddy-simulations-marine",
+    "series": "Final Public Oral Exam",
+    "title": "Winds, Waves, and Wakes: Investigating the impact of ocean waves in large eddy simulations of marine atmospheric boundary layers and offshore wind farms",
+    "location": {
+      "name": "Engineering Quad J Wing",
+      "id": "",
+      "detail": "J223"
+    },
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
+  },
+  {
+    "guid": "ps_events:4746:delta:0",
+    "startTime": "2026-09-25T15:00:00",
+    "endTime": "2026-09-25T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/industrial-electrification-technologies-and-interactions-energy-system",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:&nbsp\\;Electrifying energy-intensive industries is a key component of reducing fossil fuel consumption and meeting decarbonization goals\\, but these end uses have been slower to transition than other sectors of the economy because of the diversity of industrial processes\\, the heat and temperature requirements involved\\, and the capital-intensive nature of existing infrastructure. The scale of transitioning this sector of the economy will also have significant impacts on the broader electricity sector\\, including changes in demand patterns\\, grid capacity requirements\\, and",
+    "title": "Industrial Electrification: Technologies and Interactions with the Energy System",
+    "location": {
+      "name": "Bowen Hall",
+      "id": "",
+      "detail": "222"
+    },
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
+  },
+  {
+    "guid": "ps_events:4751:delta:0",
+    "startTime": "2026-10-09T15:00:00",
+    "endTime": "2026-10-09T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/mechanics-asteroid-exploration-recent-missions-and-future-plans",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:The exploration of primitive bodies in the solar system\\, such as asteroids and comets\\, is driven by scientific questions about the early solar system\\, long-term goals of utilizing primitive body resources in space\\, and the protection of the planet from hazardous impacts. Motivated by these concerns\\, there have been many missions to these small bodies over the last few decades\\, with each one uncovering new details about these bodies that further motivate their exploration\\, while identifying new technologies that are needed to continue our progress. Despite past success\\, there",
+    "title": "The Mechanics of Asteroid Exploration: Recent Missions and Future Plans",
+    "location": {
+      "name": "Bowen Hall",
+      "id": "",
+      "detail": "222"
+    },
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
+  },
+  {
+    "guid": "ps_events:4756:delta:0",
+    "startTime": "2026-11-06T15:00:00",
+    "endTime": "2026-11-06T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/current-understanding-and-unsolved-problems-thermal-conductivity-materials",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:Thermal conductivity is a basic and familiar property of materials: silver spoons conduct heat well and plastic does not. High thermal conductivity is desirable for heat exchangers and thermal management while low thermal conductivity is needed for thermal insulation. In recent years\\, the combined efforts of materials scientists\\, engineers\\, physicists\\, and chemists have succeeded in pushing-back long-established limits in the thermal conductivity of materials. Advances in experimental methods have expanded the range of materials that can be studied with high throughput and",
+    "title": "Current Understanding and Unsolved Problems in the Thermal Conductivity of Materials",
+    "location": {
+      "name": "Bowen Hall",
+      "id": "",
+      "detail": "222"
+    },
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
+  },
+  {
+    "guid": "ps_events:4761:delta:0",
+    "startTime": "2026-11-13T15:00:00",
+    "endTime": "2026-11-13T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/tbd",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:TBDBio:Dr. Maruthi Akella is a professor in Aerospace Engineering and Engineering Mechanics at UT Austin where he holds the Cockrell Family Endowed Chair in Engineering. His research encompasses coordinated systems\\, learning\\, adaptation\\, and vision-based sensing. His research group contributed the onboard guidance algorithm for the Intuitive Machines IM-1 mission \u2013 the first U.S. moon landing in more than 50 years since the Apollo era. The major impacts of Dr. Akella\u2019s work have been recognized through the AIAA Mechanics and Control of Flight Award\\, the AAS",
+    "title": "TBD",
+    "location": {
+      "name": "Bowen Hall",
+      "id": "",
+      "detail": "222"
+    },
+    "speaker": "",
     "cancelled": "",
     "bannerImage": "",
     "itemType": "advertisement"
   },
   {
-    "guid": "ps_events:11856:delta:0",
-    "startTime": "2025-09-11T16:30:00",
-    "endTime": "2025-09-11T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/navid-azizan-mit",
+    "guid": "ps_events:4801:delta:0",
+    "startTime": "2026-11-20T15:00:00",
+    "endTime": "2026-11-20T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/nuclear-electric-propulsion-progress-challenges-and-path-high-power-space-systems",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:Nuclear electric propulsion (NEP) offers the potential to fundamentally expand the capability and reach of spacecraft\\, but realizing that potential requires overcoming significant challenges in reactor technology\\, power conversion and distribution\\, thermal management\\, electric propulsion\\, and system integration. This seminar will examine the current state of NEP development\\, highlighting recent progress while exploring the demanding requirements associated with operating high-power systems continuously for years or even decades in the space environment.",
+    "title": "Nuclear Electric Propulsion: Progress, Challenges, and the Path to High-Power Space Systems",
     "location": {
-      "name": "Sherrerd Hall",
+      "name": "Bowen Hall",
       "id": "",
-      "detail": "101"
+      "detail": ""
     },
-    "speaker": "Navid Azizan\\, MIT",
-    "content": "AbstractIncorporating prior knowledge and domain-specific input\r-output requirements\\, such as safety or stability\\, as hard constraints into neural networks is a key enabler for their deployment in high-stakes applications. However\\, existing methods often rely on soft penalties\\, which are insufficient. In this talk\\, I will introduce hard-constrained neural networks (HardNet)\\, a general framework for enforcing hard\\, input-dependent constraints by appending a differentiable enforcement layer to anyneural network. This approach enables end-to-end training and\\, crucially\\, is",
-    "series": "Optimization Seminar",
-    "title": "",
+    "speaker": "",
     "cancelled": "",
     "bannerImage": "",
-    "itemType": "advertisement"
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
   },
   {
-    "guid": "ps_events:11861:delta:0",
-    "startTime": "2025-09-15T12:15:00",
-    "endTime": "2025-09-15T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/zhuoran-yang-22-yale-university",
+    "guid": "ps_events:4766:delta:0",
+    "startTime": "2026-12-04T15:00:00",
+    "endTime": "2026-12-04T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2026/local-maps-are-all-you-need",
+    "series": "MAE Departmental Seminars",
+    "content": "Abstract:&nbsp\\;In robotics\\, we have spent a lot of time building really good maps from noisy sensor data. Who doesn\u2019t like a nice\\, crisp\\, globally consistent map? Over the last 20 years\\, I have been exploring a paradigm to robot navigation that eschews such globally consistent maps in favour of graphs of local maps\\, which are cheaper to construct\\, store\\, and query. These topometric maps enable so-called teach-and-repeat (T&amp\\;R) navigation. In this talk\\, I will give a progress update on some of the new things we are doing with T&amp\\;R including using different primary sensors\\,",
+    "title": "Local Maps Are All You Need!",
     "location": {
-      "name": "Sherrerd Hall",
+      "name": "Bowen Hall",
       "id": "",
-      "detail": "101"
+      "detail": "222"
     },
-    "speaker": "Zhuoran Yang *22\\, Yale University",
-    "content": "AbstractWe study how multi-head softmax attention models are tr\rained to perform in-context learning on linear data. Through extensive empirical experiments and rigorous theoretical analysis\\, we demystify the emergence of elegant attention patterns: a diagonal and homogeneous patternin the key-query weights\\, and a last-entry-only and zero-sum pattern in the output-value weights.Remarkably\\, these patterns consistently appear from gradient-based training starting from random initialization.Our analysis reveals that such emergent structures enable multi-head attention to",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
+    "speaker": "",
     "cancelled": "",
     "bannerImage": "",
-    "itemType": "advertisement"
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
   },
   {
-    "guid": "ps_events:11891:delta:0",
-    "startTime": "2025-09-22T12:15:00",
-    "endTime": "2025-09-22T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/xinghua-zheng-hong-kong-university-science-and-technology",
+    "guid": "ps_events:4811:delta:0",
+    "startTime": "2027-04-16T15:00:00",
+    "endTime": "2027-04-16T16:00:00",
+    "urlRef": "https://mae.princeton.edu/events/2027/new-technology-new-astrophysics",
+    "series": "MAE Departmental Seminars",
+    "content": "How is it possible that 1/4 of the Nobel Prizes in Physics since 2006 have been for astrophysics? All 5 of them came from new technologies\\, and two required space observatories. I\u2019ll review the breakthrough ideas that grew into discoveries\\, and suggest where future technologies might go.The JWST is working brilliantly\\, and has found Little Red Dots\\, the current mystery object. But there\u2019s still no Earth 2.0. The DKIST solar telescope with adaptive optics is working beautifully. &nbsp\\;The Vera Rubin Telescope is online\\, the Nancy Grace Roman Space Telescope will be launched just before this",
+    "title": "New Technology for New Astrophysics",
     "location": {
-      "name": "Sherrerd Hall",
+      "name": "Bowen Hall",
       "id": "",
-      "detail": "101"
+      "detail": ""
     },
-    "speaker": "Xinghua Zheng\\, Hong Kong University of Science and Technology",
-    "content": "AbstractWe develop a statistical learning framework for constru\rcting the stochastic discount factor (SDF) portfolio. To address the dimensionality challenge\\, we extend the MAXSER method (Ao\\, Li\\, and Zheng\\, 2019\\, RFS) to allow for N >\\;>\\; T\\; prove that it surely screens foruseful characteristics\\; and establish asymptotic normality for the SDF loading estimates. Using 153 characteristics returns from cross-sectional regressions\\, our framework not only constructs an SDF with a high out-of-sample Sharpe ratio that successfully prices the cross-section of expected returns\\, but also",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
+    "speaker": "",
     "cancelled": "",
     "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11826:delta:0",
-    "startTime": "2025-09-23T16:30:00",
-    "endTime": "2025-09-23T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/dimitris-bertsimas-mit",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Dimitris Bertsimas\\, MIT",
-    "series": "Optimization Seminar,ORFE Department Colloquia",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11886:delta:0",
-    "startTime": "2025-09-29T12:15:00",
-    "endTime": "2025-09-29T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/zhimei-ren-university-pennsylvania",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Zhimei Ren\\, University of Pennsylvania",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11931:delta:0",
-    "startTime": "2025-10-01T16:30:00",
-    "endTime": "2025-10-01T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/benjamin-zhang-university-north-carolina-chapel-hill",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Benjamin Zhang\\, University of North Carolina\\, Chapel Hill",
-    "content": "AbstractParticle exchange methods such as parallel tempering (a\rlso known as replica exchange) are arguably the most effective computational tools for approximating integrals with respect to high-dimensional Gibbs measures with complex structure. In particular\\, exchange between replicas with different temperatures can greatly mitigate the so-called rare event sampling problem. One can consider the Gibbs measure as the solution toan eigenvalue problem with known (zero) eigenvalue. We describe how thesemethods can be generalized to problems where the eigenvalue is not known \\;",
-    "series": "Stochastic Analysis Seminar",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11841:delta:0",
-    "startTime": "2025-10-07T16:30:00",
-    "endTime": "2025-10-07T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/milind-tambe-harvard-university",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Milind Tambe\\, Harvard University",
-    "content": "AbstractFor nearly two decades\\, my team’s work on AI for Soc\rial Impact (AI4SI) has focused on optimizing limited resources in criticalareas like public health\\, conservation\\, and public safety. In this talk\\, I will highlight field test results from our deployed work in India\\, demonstrating measurable improvements in effectiveness for the world's twolargest mobile health programs for maternal and child care. We have leveraged innovative restless and collaborative bandit algorithms to achieve these gains\\, revealing new technical directions in the process. Additionally\\, I will",
-    "series": "ORFE Department Colloquia",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11866:delta:0",
-    "startTime": "2025-10-09T16:30:00",
-    "endTime": "2025-10-09T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/antoine-deza-mcmaster-university",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Antoine Deza\\, McMaster University",
-    "content": "A lattice $(d\\,k)$-polytope is the convex hull of a set of poin\rts in dimension $d$ \\;whose coordinates are \\;integers ranging from $0$ to $k$. \\;We investigate the \\;smallest possible distance between two disjoint lattice $(d\\,k)$-polytopes. A pair \\;of polytopes \\;achieving \\;this \\;minimal distance are called kissing polytopes. \\;This question arises \\;in various contexts where the minimal distance between such polytopes \\;appears in complexity bounds for optimization algorithms. \\;We provide \\;nearly matching lower \\;and upper bounds for this",
-    "series": "Optimization Seminar",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11871:delta:0",
-    "startTime": "2025-10-27T12:15:00",
-    "endTime": "2025-10-27T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/xuming-he-washington-university",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Xuming He\\, Washington University",
-    "content": "AbstractExpected \\;shortfall\\, measuring the average outcom\re (e.g.\\, portfolio loss) above a given quantile of its probability distribution\\, is a common financial risk measure. The same measure can be usedto characterize treatment effects in the tail of an outcome distribution\\,with applications ranging from policy evaluation in economics and publichealth to biomedical investigations. Expected \\;shortfall \\;regression is a natural approach of modeling covariate-adjusted \\;expected \\;shortfalls. Because the \\;expected \\;shortfall \\;cannot be written as a",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11896:delta:0",
-    "startTime": "2025-11-11T12:15:00",
-    "endTime": "2025-11-11T13:15:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/yang-feng-new-york-university",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Yang Feng\\, New York University",
-    "series": "S. S. Wilks Memorial Seminar in Statistics",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11831:delta:0",
-    "startTime": "2025-11-11T16:30:00",
-    "endTime": "2025-11-11T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/vijay-vazirani-university-california-irvine",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Vijay Vazirani\\, University of California\\, Irvine",
-    "content": "AbstractFor a mechanism to be truly impactful\\, it must combine\rstrong game-theoretic properties with computational efficiency -- a \\;classic example is the Gale–Shapley (1962) stable matching algorithm. This talk focuses on cardinal-utility matching markets\\, for which the most \\;well \\;known mechanism is the pricing-based approach of Hyllandand Zeckhauser (1979). While this mechanism satisfies several desirable game-theoretic properties\\, recent work has shown it to be computationallyintractable\\, both in theory and in practice.This talk will review a series of",
-    "series": "ORFE Department Colloquia",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
-  },
-  {
-    "guid": "ps_events:11906:delta:0",
-    "startTime": "2025-11-18T16:30:00",
-    "endTime": "2025-11-18T17:30:00",
-    "urlRef": "https://orfe.princeton.edu/events/2025/yann-lecun-new-york-university",
-    "location": {
-      "name": "Sherrerd Hall",
-      "id": "",
-      "detail": "101"
-    },
-    "speaker": "Yann LeCun\\, New York University",
-    "series": "ORFE Department Colloquia",
-    "title": "",
-    "cancelled": "",
-    "bannerImage": "",
-    "itemType": "advertisement"
+    "itemType": "advertisement",
+    "titleSource": "ics",
+    "titleIsPlaceholder": false
   }
 ]

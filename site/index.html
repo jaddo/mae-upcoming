@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ORFE Upcoming Feed</title>
-  <meta name="description" content="Published ORFE Upcoming feed assets for production and development consumers.">
+  <title>MAE Upcoming Feed</title>
+  <meta name="description" content="Published MAE Upcoming feed assets for production and development consumers.">
   <style>
     :root {
       --brand: #e77500;
@@ -441,15 +441,14 @@
 <body>
   <header class="hero">
     <div class="container">
-      <h1>ORFE Upcoming</h1>
+      <h1>MAE Upcoming</h1>
       <p>
-        This site republishes machine-readable <a href="https://orfe.princeton.edu/events">ORFE Upcoming Events</a> for ingest into campus services &mdash; among them the
+        This site republishes machine-readable <a href="https://mae.princeton.edu/events">MAE Upcoming Events</a> for ingest into campus services &mdash; among them the
         School of Engineering events newsletter and the department pages on the Engineering site.
         Production and development assets are available here for external consumers, integrations, and manual inspection.</p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="#feed-simulator">Simulate a newsletter edition</a>
+        <a class="btn btn-primary" href="#feed-simulator">Simulate an edition</a>
         <a class="btn btn-quiet" href="./events.json">Production feed</a>
-        <a class="btn btn-quiet" href="./events-newsletter.json">Newsletter variant</a>
         <a class="btn btn-quiet" href="./dev/">Development assets</a>
       </div>
     </div>
@@ -459,12 +458,13 @@
     <div class="container sim-block" id="feed-simulator" data-feed="./events.json">
       <div class="section-head">
         <h2>Feed view simulator</h2>
-        <a href="https://github.com/pu-orfe/upcoming#newsletter-variant">How the window is defined</a>
+        <a href="https://github.com/pu-shd/mae-upcoming#feed-view-simulator">How the window is defined</a>
       </div>
       <p class="lede">
-        Pick a publication date and a submission deadline to see exactly which events the
-        editorial system would ingest for that edition, and which of them still needs a
-        proper title.
+        Pick a publication date and a submission deadline to see exactly which events fall
+        inside that window, and which of them still needs a proper title. MAE publishes the
+        full feed only, so this is a planning view over <code>events.json</code> rather than a
+        preview of a separate published file.
       </p>
       <p class="nfs-hint nfs-runs-here">
         Runs entirely in your browser against <a href="./events.json"><code>events.json</code></a>,
@@ -576,7 +576,7 @@
     <div class="container">
       <div class="section-head">
         <h2>Available resources</h2>
-        <a href="https://github.com/pu-orfe/upcoming">Source repository</a>
+        <a href="https://github.com/pu-shd/mae-upcoming">Source repository</a>
       </div>
       <p class="lede">
         The production JSON feed is generated from the upstream ICS source on a recurring GitHub Actions schedule.
@@ -595,24 +595,12 @@
         </li>
         <li>
           <article class="card">
-            <p class="meta">Production &middot; newsletter</p>
-            <h3><a href="./events-newsletter.json">/events-newsletter.json</a></h3>
-            <p>The same records, narrowed to one newsletter edition: publication day 00:00 through
-              that week&rsquo;s Sunday 23:59:59, Eastern.</p>
-            <p>Built for editors assembling an issue, so the list is short enough to review and the
-              events in it are the ones most likely to have a real title. Each record adds
-              <code>newsletterEdition</code>, the edition it was built for. Use the
-              <a href="#feed-simulator">simulator</a> to see any edition&rsquo;s contents.</p>
-          </article>
-        </li>
-        <li>
-          <article class="card">
             <p class="meta">Production release asset</p>
-            <h3><a href="https://github.com/pu-orfe/upcoming/releases/download/latest/events.json">GitHub release asset</a></h3>
-            <p>The same two files, attached to the <code>latest</code> release for consumers that
+            <h3><a href="https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json">GitHub release asset</a></h3>
+            <p>The same file, attached to the <code>latest</code> release for consumers that
               prefer GitHub downloads over the Pages domain.</p>
-            <p>The release notes also record the ICS checksum and the newsletter edition each build
-              was made for, which is how the pipeline detects that nothing has changed.</p>
+            <p>The release notes also record the ICS checksum each build was made from, which is
+              how the pipeline detects that nothing has changed.</p>
           </article>
         </li>
         <li>
@@ -638,7 +626,7 @@
     <div class="container sim-block" id="record-shape">
       <div class="section-head">
         <h2>What each record contains</h2>
-        <a href="https://github.com/pu-orfe/upcoming/blob/main/schema/events.schema.json">JSON schema</a>
+        <a href="https://github.com/pu-shd/mae-upcoming/blob/main/schema/events.schema.json">JSON schema</a>
       </div>
       <p class="lede">
         Both feeds are a JSON array of event objects in start-time order. Times are local Eastern
@@ -659,13 +647,13 @@
             <tr><td><code>title</code></td><td>The talk title. Never empty &mdash; see <code>titleSource</code> for whether a person wrote it.</td></tr>
             <tr><td><code>titleSource</code></td><td><code>enriched</code> or <code>ics</code> for a real title; <code>fallback-speaker</code>, <code>fallback-template</code> or <code>fallback-series</code> when this pipeline had to synthesise one.</td></tr>
             <tr><td><code>titleIsPlaceholder</code></td><td><code>true</code> for the three <code>fallback-</code> sources. These are the listings an editor will want to chase before publication.</td></tr>
-            <tr><td><code>speaker</code></td><td>Speaker and affiliation, as advertised.</td></tr>
+            <tr><td><code>title</code></td><td>The talk title, taken straight from the upstream feed&rsquo;s <code>SUMMARY</code>.</td></tr>
+            <tr><td><code>speaker</code></td><td>Speaker and affiliation, scraped from the event page. MAE advertises the title in the feed and the speaker on the page &mdash; the opposite way round from ORFE, whose pipeline this is forked from.</td></tr>
             <tr><td><code>series</code></td><td>Seminar or colloquium series, comma-joined when an event belongs to more than one.</td></tr>
             <tr><td><code>location</code></td><td>Object with <code>name</code> (building), <code>detail</code> (room) and a reserved <code>id</code>.</td></tr>
             <tr><td><code>content</code></td><td>Abstract or description text.</td></tr>
             <tr><td><code>urlRef</code></td><td>Link to the event detail page.</td></tr>
             <tr><td><code>rawEventDetails</code></td><td>Optional raw HTML of the detail panel, with <code>rawExtractAbstract</code> and <code>rawExtractBio</code> pulled out of it.</td></tr>
-            <tr><td><code>newsletterEdition</code></td><td>Newsletter variant only: the edition the record was selected for, identified by that week&rsquo;s Monday.</td></tr>
             <tr><td><code>cancelled</code>, <code>bannerImage</code>, <code>itemType</code></td><td>Reserved fields the editorial system expects.</td></tr>
           </tbody>
         </table>
@@ -676,7 +664,7 @@
       <div class="container">
         <div class="section-head">
           <h2>How the assets are produced</h2>
-          <a href="https://github.com/pu-orfe/upcoming/actions">Workflow runs</a>
+          <a href="https://github.com/pu-shd/mae-upcoming/actions">Workflow runs</a>
         </div>
         <div class="notes">
           <section class="note">
@@ -697,7 +685,7 @@
             <h3>Source code</h3>
             <p>
               The implementation, workflow definitions, and Pages templates all live in
-              <a href="https://github.com/pu-orfe/upcoming">pu-orfe/upcoming</a>.
+              <a href="https://github.com/pu-shd/mae-upcoming">pu-shd/mae-upcoming</a>.
             </p>
           </section>
         </div>

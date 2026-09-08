@@ -100,6 +100,14 @@
         "type": "string",
         "description": "Optional inner HTML fragment from .events-detail-main of the event page."
       },
+      "rawExtractAbstract": {
+        "type": "string",
+        "description": "Optional abstract text parsed out of rawEventDetails. Present only when raw-extract enrichment runs and the body carries an 'Abstract:' label; MAE publishes some descriptions with no label at all."
+      },
+      "rawExtractBio": {
+        "type": "string",
+        "description": "Optional speaker bio parsed out of rawEventDetails. Present only when raw-extract enrichment runs and the body carries a 'Bio:' label."
+      },
       "titleSource": {
         "type": "string",
         "enum": [

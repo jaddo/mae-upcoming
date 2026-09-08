@@ -2,7 +2,7 @@
 
 Every case pins --as-of 2025-09-05T12:00:00-04:00 (a Friday). The next edition is
 then Monday 2025-09-08, covering Sep 8 00:00 - Sep 14 23:59:59 ET, and exactly two
-of the 14 events in examples/sample_input.example.ics fall inside it.
+of the 14 events in tests/fixtures/orfe_shape.ics fall inside it.
 """
 import hashlib
 import json
@@ -14,7 +14,10 @@ import pytest
 from src import main as main_mod
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLE_ICS = REPO_ROOT / "examples" / "sample_input.example.ics"
+SAMPLE_ICS = REPO_ROOT / "tests" / "fixtures" / "orfe_shape.ics"
+# Pinned so the repo-root transform_config.json (MAE's) cannot change what the
+# windowing tests see; the edition maths is shape-independent.
+ORFE_CONFIG = REPO_ROOT / "tests" / "fixtures" / "transform_config.orfe.json"
 TEST_CONFIG = REPO_ROOT / "tests" / "fixtures" / "newsletter_config.test.json"
 
 AS_OF = "2025-09-05T12:00:00-04:00"
@@ -27,7 +30,8 @@ def run(tmp_path, *extra, newsletter=True, as_of=AS_OF, config=TEST_CONFIG):
     """Run the CLI against the sample ICS; returns (rc, primary_path, variant_path)."""
     primary = tmp_path / "events.json"
     variant = tmp_path / "events-newsletter.json"
-    argv = ["--ics-url", str(SAMPLE_ICS), "--output", str(primary)]
+    argv = ["--ics-url", str(SAMPLE_ICS), "--output", str(primary),
+            "--config", str(ORFE_CONFIG)]
     if newsletter:
         argv += ["--newsletter-output", str(variant), "--newsletter-config", str(config)]
     if as_of:

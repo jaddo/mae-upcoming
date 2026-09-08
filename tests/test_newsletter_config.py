@@ -16,7 +16,9 @@ from src.newsletter import (
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE_CONFIG = REPO_ROOT / "newsletter_config.example.json"
-LIVE_CONFIG = REPO_ROOT / "newsletter_config.json"
+# MAE commits no live schedule (see test_pipeline_contract), so the example is
+# the real committed config these loader tests read.
+LIVE_CONFIG = REPO_ROOT / "newsletter_config.example.json"
 
 
 @pytest.fixture

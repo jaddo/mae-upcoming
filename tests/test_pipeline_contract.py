@@ -2,7 +2,12 @@
 
 These catch the class of bug unit tests structurally cannot: a workflow that
 publishes a file nobody verifies, a caller that forgets a required action input,
-or a cron that silently desyncs from newsletter_config.json.
+or a Pages tree that publishes a file nobody verifies.
+
+MAE does not ship the newsletter variant: src/newsletter.py and
+src/notify_missing_titles.py are present and tested but deliberately unwired.
+Several tests here pin that, so turning the feature on is a visible decision
+rather than a side effect.
 """
 import re
 from pathlib import Path
@@ -13,9 +18,9 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIR = REPO_ROOT / ".github" / "workflows"
 PAGES_ACTION = REPO_ROOT / "actions" / "prepare-pages-artifact" / "action.yml"
-WATCH_WORKFLOW = WORKFLOW_DIR / "newsletter_deadline_watch.yml"
 VERIFY_WORKFLOW = WORKFLOW_DIR / "verify_published_feed.yml"
 ICS_WORKFLOW = WORKFLOW_DIR / "ics_to_json.yml"
+DEV_WORKFLOW = WORKFLOW_DIR / "ics_to_json_dev.yml"
 
 NEWSLETTER_ASSET = "events-newsletter.json"
 
@@ -63,8 +68,11 @@ def test_pages_action_is_valid_yaml():
 # The composite action and its callers
 # --------------------------------------------------------------------------
 
-def test_action_declares_newsletter_inputs():
+def test_action_gates_the_newsletter_behind_an_opt_in_flag():
     inputs = load_yaml(PAGES_ACTION)["inputs"]
+    assert "include-newsletter" in inputs
+    assert str(inputs["include-newsletter"]["default"]) == "false"
+    # The file inputs stay declared so enabling the flag is the only change needed.
     assert "prod-events-newsletter-file" in inputs
     assert "dev-events-newsletter-file" in inputs
 
@@ -83,51 +91,44 @@ def test_at_least_one_caller_uses_each_local_source():
     assert "local" in dev_sources
 
 
-def test_every_caller_using_local_prod_source_passes_newsletter_file():
+def test_no_caller_enables_the_newsletter():
+    """The feature is out of scope for MAE; enabling it should be deliberate."""
+    for path, step in pages_action_callers():
+        with_ = step.get("with") or {}
+        assert str(with_.get("include-newsletter", "false")).lower() != "true", (
+            f"{path.name} turns the newsletter on; MAE does not publish it and no "
+            "newsletter_config.json describes MAE's schedule"
+        )
+
+
+def test_local_callers_pass_the_files_the_action_actually_requires():
+    """A caller that forgets a required input should hard-fail, not ship a partial tree."""
     for path, step in pages_action_callers():
         with_ = step.get("with") or {}
         if with_.get("prod-events-source") == "local":
-            assert with_.get("prod-events-newsletter-file"), (
-                f"{path.name} publishes a local prod feed without the newsletter file; "
-                "the Pages tree would be missing /events-newsletter.json"
-            )
-
-
-def test_every_caller_using_local_dev_source_passes_newsletter_file():
-    for path, step in pages_action_callers():
-        with_ = step.get("with") or {}
+            assert with_.get("prod-events-file"), f"{path.name}: no prod-events-file"
         if with_.get("dev-events-source") == "local":
-            assert with_.get("dev-events-newsletter-file"), (
-                f"{path.name} publishes a local dev feed without the newsletter file"
+            assert with_.get("dev-events-file"), f"{path.name}: no dev-events-file"
+            assert with_.get("dev-events-nofpo-file"), f"{path.name}: no dev-events-nofpo-file"
+
+
+def test_newsletter_downloads_are_guarded_by_the_flag():
+    """Both release branches rebuild the tree from scratch on every deploy, so an
+    unguarded download would 404-warn on every run while the feature is off."""
+    script = PAGES_ACTION.read_text(encoding="utf-8")
+    for line_no, line in enumerate(script.splitlines()):
+        if "gh release download" in line and NEWSLETTER_ASSET in line:
+            preceding = "\n".join(script.splitlines()[max(0, line_no - 3):line_no])
+            assert 'INCLUDE_NEWSLETTER}" = "true"' in preceding, (
+                f"unguarded newsletter download at line {line_no + 1}"
             )
 
 
-def test_release_branch_downloads_newsletter_asset():
-    """The Pages tree is rebuilt from scratch on every deploy.
-
-    publish_landing_pages.yml assembles it from release assets alone, so without
-    this download a landing-page-only run would delete /events-newsletter.json
-    from the live site and the verifier would then report drift.
-    """
+def test_local_branches_require_their_files():
     script = PAGES_ACTION.read_text(encoding="utf-8")
-    downloads = re.findall(
-        r"gh release download (\w+) --pattern '([^']+)'[^\n]*--dir (\S+)", script
-    )
-    prod = [(tag, pattern, d) for tag, pattern, d in downloads if tag == "latest"]
-    dev = [(tag, pattern, d) for tag, pattern, d in downloads if tag == "dev"]
-    assert any(NEWSLETTER_ASSET in pattern for _, pattern, _ in prod), (
-        "the latest-release branch never downloads the newsletter asset"
-    )
-    assert any(NEWSLETTER_ASSET in pattern for _, pattern, _ in dev), (
-        "the dev-release branch never downloads the newsletter asset"
-    )
-
-
-def test_local_branches_require_the_newsletter_file():
-    """A caller that forgets the input should hard-fail, not ship a partial tree."""
-    script = PAGES_ACTION.read_text(encoding="utf-8")
-    assert "prod-events-source=local requires prod-events-file and prod-events-newsletter-file" in script
-    assert "dev-events-source=local requires dev-events-file, dev-events-nofpo-file and dev-events-newsletter-file" in script
+    assert "prod-events-source=local requires prod-events-file" in script
+    assert "dev-events-source=local requires dev-events-file and dev-events-nofpo-file" in script
+    assert "include-newsletter=true requires prod-events-newsletter-file" in script
 
 
 # --------------------------------------------------------------------------
@@ -144,10 +145,16 @@ def published_pages_paths():
     paths = set()
 
     for target in re.findall(r"^\s*cp \S+ (pages/\S+\.json)\s*$", script, re.MULTILINE):
+        if NEWSLETTER_ASSET in target:
+            continue
         paths.add(target[len("pages/"):])
 
     for line in script.splitlines():
         if "gh release download" not in line:
+            continue
+        # Guarded by include-newsletter, which no caller enables, so it is not
+        # actually published and must not demand a verify check.
+        if NEWSLETTER_ASSET in line:
             continue
         directory = re.search(r"--dir (\S+)", line)
         if not directory:
@@ -168,7 +175,7 @@ def verify_checks():
 
 def test_verify_workflow_declares_checks():
     checks = verify_checks()
-    assert len(checks) >= 5, f"expected the full check list, got {checks}"
+    assert len(checks) >= 3, f"expected the full check list, got {checks}"
 
 
 def test_every_published_pages_path_has_a_verify_check():
@@ -178,11 +185,15 @@ def test_every_published_pages_path_has_a_verify_check():
 
 
 @pytest.mark.parametrize(
-    "path", ["events.json", "events-newsletter.json",
-             "dev/events.json", "dev/events-nofpo.json", "dev/events-newsletter.json"],
+    "path", ["events.json", "dev/events.json", "dev/events-nofpo.json"],
 )
 def test_expected_paths_are_verified(path):
     assert path in verify_checks()
+
+
+def test_the_verifier_does_not_check_a_path_nobody_publishes():
+    """A check for the unpublished newsletter variant would report permanent drift."""
+    assert NEWSLETTER_ASSET not in " ".join(verify_checks())
 
 
 # --------------------------------------------------------------------------
@@ -379,25 +390,61 @@ def test_simulator_asset_is_self_contained():
     """A strict-ish Pages deploy plus no bundler means no external imports."""
     js = (SITE_DIR / "feed-simulator.js").read_text(encoding="utf-8")
     assert "import(" not in js and "require(" not in js.replace("module.exports", "")
-    assert "http://" not in js and "https://" not in js.replace("orfe.princeton.edu", "")
+    assert "http://" not in js and "https://" not in js.replace("mae.princeton.edu", "")
 
 
 # --------------------------------------------------------------------------
 # The ICS pipeline
 # --------------------------------------------------------------------------
 
-def test_ics_workflow_forces_rebuild_on_edition_rollover():
-    """The window is time-driven; the skip gate must not be ICS-only."""
+def test_ics_skip_gate_is_the_ics_hash_alone():
+    """ORFE additionally keyed the gate on the newsletter edition, which moves on
+    the calendar. With no time-driven output left, the hash is the whole gate --
+    and it must not call into the unwired newsletter module."""
     text = ICS_WORKFLOW.read_text(encoding="utf-8")
-    assert "NEWSLETTER_EDITION" in text
-    assert "NEWSLETTER_CONFIG_SHA256" in text
-    assert "--print-edition-id" in text
+    assert "ICS_SHA256" in text
+    assert "--print-edition-id" not in text
+    assert "src.newsletter" not in text
 
 
-def test_ics_workflow_publishes_and_validates_the_newsletter_asset():
+def test_ics_workflow_publishes_and_validates_the_full_feed():
     text = ICS_WORKFLOW.read_text(encoding="utf-8")
-    assert "events-newsletter.schema.json" in text
-    assert "$NEWSLETTER_ASSET" in text
+    assert "events.schema.json" in text
+    assert "$OUTPUT_ASSET" in text
+    assert "events-newsletter.schema.json" not in text
+
+
+def test_ics_workflow_commits_maes_inverted_enrichment_defaults():
+    """The inversion is the one thing that fails silently: a swapped mapping
+    yields schema-valid output with title and speaker transposed. Defaults live
+    in the workflow so a fresh clone reproduces MAE rather than ORFE."""
+    text = ICS_WORKFLOW.read_text(encoding="utf-8")
+    assert "ENRICH_TARGET_FIELD" in text and "'speaker'" in text
+    assert "ENRICH_SUBTITLE_SELECTOR" in text
+    assert "field--name-field-ps-event-speaker-name" in text
+
+
+def test_workflows_carry_the_cloudflare_bypass_header():
+    """mae.princeton.edu 403s every non-browser client. Without the header the
+    enrichment steps succeed while populating nothing at all."""
+    for path in (ICS_WORKFLOW, DEV_WORKFLOW):
+        assert "BOT_BYPASS_HEADER_VALUE" in path.read_text(encoding="utf-8"), (
+            f"{path.name} would enrich nothing"
+        )
+
+
+def test_no_workflow_hardcodes_the_orfe_pages_domain():
+    for path in workflow_paths():
+        text = path.read_text(encoding="utf-8")
+        assert "upcoming.orfe.princeton.edu" not in text, f"{path.name} still points at ORFE"
+
+
+def test_dev_workflow_excludes_maes_spelling_of_the_fpo_series():
+    """`FPO` is ORFE's name for it and matches nothing in MAE's CATEGORIES, which
+    would make the filtered variant byte-identical to the full feed."""
+    text = DEV_WORKFLOW.read_text(encoding="utf-8")
+    assert "Final Public Oral Exam" in text
+    assert '--exclude-series "FPO"' not in text
 
 
 def test_no_workflow_pins_as_of_outside_manual_dispatch():
@@ -414,51 +461,38 @@ def test_no_workflow_pins_as_of_outside_manual_dispatch():
 
 
 # --------------------------------------------------------------------------
-# The deadline watch
+# The newsletter is present but unwired
 # --------------------------------------------------------------------------
 
-def test_newsletter_watch_cron_is_hourly_and_offset():
-    workflow = load_yaml(WATCH_WORKFLOW)
-    # PyYAML parses the bare key `on` as the boolean True.
-    triggers = workflow.get("on") or workflow.get(True)
-    crons = [entry["cron"] for entry in triggers["schedule"]]
-    assert crons == ["5 * * * *"]
-    minute, hour, dom, month, dow = crons[0].split()
-    # A weekday- or hour-pinned cron would duplicate newsletter_config.json in a
-    # place the config cannot reach, and GitHub cron is UTC-only.
-    assert hour == "*" and dow == "*"
-    assert minute != "0", "offset from the pipeline and verifier to avoid contention"
+def test_no_workflow_invokes_the_newsletter_or_the_deadline_watch():
+    """Both modules keep their unit tests, so this is the only thing standing
+    between 'available' and 'running against a schedule nobody wrote'."""
+    for path in workflow_paths():
+        text = path.read_text(encoding="utf-8")
+        assert "src.newsletter" not in text, f"{path.name} invokes the newsletter"
+        assert "notify_missing_titles" not in text, f"{path.name} invokes the watch"
+        assert "--newsletter-output" not in text, f"{path.name} writes the variant"
 
 
-def test_newsletter_watch_does_not_touch_failure_streak():
-    """A red run means editors missed a deadline, not that CI broke.
+def test_the_newsletter_modules_are_still_importable():
+    """Unwired, not deleted: turning the feature on should not mean rewriting it."""
+    import importlib
 
-    Checks the parsed steps rather than the raw text, so the explanatory comment
-    in the workflow does not read as a usage.
-    """
-    used = [str(step.get("uses") or "") for step in iter_steps(load_yaml(WATCH_WORKFLOW))]
-    assert used, "the watch workflow has no steps"
-    assert not any("update-failure-streak" in u for u in used)
+    assert importlib.import_module("src.newsletter")
+    assert importlib.import_module("src.notify_missing_titles")
+
+
+def test_no_live_newsletter_schedule_is_committed():
+    """ORFE's newsletter_config.json encoded ORFE's Monday-noon schedule and its
+    Labor Day exceptions. Shipping it here would describe a schedule MAE never
+    agreed to; the example file is the template for when MAE wants one."""
+    assert not (REPO_ROOT / "newsletter_config.json").exists()
+    assert (REPO_ROOT / "newsletter_config.example.json").exists()
 
 
 def test_ics_workflow_does_use_the_failure_streak_action():
-    """Guards the test above from passing because the action was renamed."""
     used = [str(step.get("uses") or "") for step in iter_steps(load_yaml(ICS_WORKFLOW))]
     assert any("update-failure-streak" in u for u in used)
-
-
-def test_newsletter_watch_has_issue_write_and_a_concurrency_group():
-    workflow = load_yaml(WATCH_WORKFLOW)
-    assert workflow["permissions"]["issues"] == "write"
-    assert workflow["permissions"]["contents"] == "read"
-    assert workflow["concurrency"]["group"] == "newsletter-deadline-watch"
-    assert workflow["concurrency"]["cancel-in-progress"] is False
-
-
-def test_newsletter_watch_defaults_dispatch_to_dry_run():
-    workflow = load_yaml(WATCH_WORKFLOW)
-    triggers = workflow.get("on") or workflow.get(True)
-    assert triggers["workflow_dispatch"]["inputs"]["dry_run"]["default"] is True
 
 
 # --------------------------------------------------------------------------

@@ -117,7 +117,7 @@ test("titleSource alone is enough when the boolean is missing", () => {
 
 test("a feed with no provenance falls back to inference, and says so", () => {
   const synthesized = S.placeholderState({
-    title: "An ORFE Departmental Colloquia Talk", speaker: "Alice",
+    title: "An MAE Departmental Seminars Talk", speaker: "Alice",
   });
   assert.equal(synthesized.placeholder, true);
   assert.equal(synthesized.inferred, true);
@@ -205,7 +205,7 @@ test("the reported window over the full feed includes the 2026-09-28 talk", () =
   const full = [
     { guid: "wilks", startTime: "2026-09-28T12:15:00", title: "Transfer Treatment Effects",
       titleIsPlaceholder: false, titleSource: "enriched", speaker: "Annie Qu" },
-    { guid: "colloq", startTime: "2026-09-29T16:30:00", title: "An ORFE Department Colloquia Talk",
+    { guid: "colloq", startTime: "2026-09-29T16:30:00", title: "An MAE Departmental Seminars Talk",
       titleIsPlaceholder: true, titleSource: "fallback-template", speaker: "Ankur Moitra" },
     { guid: "earlier", startTime: "2026-09-21T12:15:00", titleIsPlaceholder: false },
   ];

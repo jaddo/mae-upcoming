@@ -8,7 +8,8 @@ from jsonschema import Draft7Validator
 from src import main as main_mod
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLE_ICS = REPO_ROOT / "examples" / "sample_input.example.ics"
+SAMPLE_ICS = REPO_ROOT / "tests" / "fixtures" / "orfe_shape.ics"
+ORFE_CONFIG = REPO_ROOT / "tests" / "fixtures" / "transform_config.orfe.json"
 TEST_CONFIG = REPO_ROOT / "tests" / "fixtures" / "newsletter_config.test.json"
 BASE_SCHEMA_PATH = REPO_ROOT / "schema" / "events.schema.json"
 NL_SCHEMA_PATH = REPO_ROOT / "schema" / "events-newsletter.schema.json"
@@ -32,6 +33,7 @@ def variant(tmp_path, capsys):
     nl = tmp_path / "events-newsletter.json"
     rc = main_mod.main([
         "--ics-url", str(SAMPLE_ICS), "--output", str(out),
+        "--config", str(ORFE_CONFIG),
         "--newsletter-output", str(nl), "--newsletter-config", str(TEST_CONFIG),
         "--as-of", AS_OF,
     ])

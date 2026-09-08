@@ -1,0 +1,30 @@
+{
+  "_comment": "MAE reads inverted from ORFE. MAE puts the talk title in the ICS SUMMARY and the speaker on the event page; ORFE does the reverse. So SUMMARY maps to title here (not speaker), comma re-escaping is off because that convention suits a speaker name and not a title, and the location strategy reads 'Bowen Hall 222' rather than ORFE's '125 - Sherrerd Hall'. The speaker is filled by enrichment -- see ENRICH_TARGET_FIELD and ENRICH_SUBTITLE_SELECTOR.",
+
+  "target_timezone": "America/New_York",
+  "time_format": "YYYY-MM-DDTHH:mm:ss",
+
+  "field_mappings": {
+    "uid": "guid",
+    "begin": "startTime",
+    "end": "endTime",
+    "url": "urlRef",
+    "categories": "series",
+    "description": "content",
+    "name": "title"
+  },
+
+  "masked_fields": ["dtstamp", "sequence", "transp", "class"],
+
+  "placeholders": {
+    "speaker": "",
+    "cancelled": "",
+    "bannerImage": "",
+    "itemType": "advertisement"
+  },
+
+  "copies": {},
+
+  "location_strategy": "building-room",
+  "escape_name_commas": false
+}

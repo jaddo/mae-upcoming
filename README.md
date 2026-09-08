@@ -1,24 +1,48 @@
-# ORFE Upcoming
+# MAE Upcoming
 
-Automated pipeline that fetches a department ICS feed, applies configurable transformation, and publishes a stable JSON file as a GitHub Release asset.
+Automated pipeline that fetches the Princeton [Mechanical and Aerospace Engineering](https://mae.princeton.edu/events) events ICS feed, applies configurable transformation, and publishes a stable JSON file as a GitHub Release asset and on GitHub Pages.
 
-Canonical development and publishing both happen in `pu-orfe/upcoming`. Release-asset mirroring to a legacy repository is currently retired (see [Legacy mirror](#legacy-mirror)). The old app/Azure dispatcher is no longer required; production refreshes now run on a native GitHub Actions schedule, a small heartbeat workflow keeps the public repo's schedules from aging out, and the latest production payload is also deployed to GitHub Pages for `upcoming.orfe.princeton.edu`.
+Forked from [`pu-orfe/upcoming`](https://github.com/pu-orfe/upcoming), which does the same job for ORFE. Both departments run on Princeton's `princeton-site-builder` platform and emit structurally identical ICS, so the pipeline, schema and tooling carry over unchanged. **What does not carry over is which field means what** — see [How MAE differs from ORFE](#how-mae-differs-from-orfe) before changing anything about titles, speakers or locations.
+
+Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Production refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest production payload is deployed to GitHub Pages.
+
+## How MAE differs from ORFE
+
+This is the important section. MAE and ORFE put the *same information in opposite places*, and because both feeds validate against the same schema, getting it wrong produces output that is schema-valid, error-free and useless — the talk title sitting in `speaker` and the speaker sitting in `title`.
+
+| | ORFE | MAE |
+|---|---|---|
+| ICS `SUMMARY` | speaker + affiliation (`Xihong Lin, Harvard University`) | **the talk title** (`Local Maps Are All You Need!`) |
+| Event page | the talk title, in `.event-subtitle` | the speaker: `.field--name-field-ps-event-speaker-name`, or `.event-subtitle` on seminar pages |
+| `LOCATION` | `101 - Sherrerd Hall` | `Bowen Hall 222`, `Engineering Quad J Wing/J223` |
+| `CATEGORIES` | seven named series plus `FPO` | `MAE Departmental Seminars`, `Final Public Oral Exam` |
+| HTML pages | fetchable | behind a Cloudflare managed challenge |
+
+Four things follow from that, and all four are configuration:
+
+1. **`SUMMARY` maps to `title`, not `speaker`.** `transform_config.json` at the repo root does this. It also turns off comma re-escaping, which is right for a speaker name (`Elynn Chen\, New York University`, as ORFE's downstream ingester wants it) and wrong for a title (`Winds\, Waves\, and Wakes`).
+2. **Enrichment writes to `speaker`.** `ENRICH_TARGET_FIELD=speaker` and `ENRICH_SUBTITLE_SELECTOR` name the element. The selector is a comma-separated list tried **left to right**, because MAE's FPO pages carry only the speaker field while its seminar pages carry only `.event-subtitle`.
+3. **Locations need a different split.** `location_strategy: "building-room"` reads `Bowen Hall 222` as name `Bowen Hall` / detail `222`. ORFE's `dash` strategy finds no separator in MAE's values and leaves `location.name` empty on every event.
+4. **Enrichment needs the bot-bypass header.** `mae.princeton.edu` returns HTTP 403 to every non-browser client, including its own home page. `BOT_BYPASS_HEADER_VALUE` is sent as `x-wdsoit-bot-bypass` and gets through. Without it every enrichment pass succeeds while populating nothing.
+
+The workflows carry MAE's values as inline defaults rather than relying only on repo variables, so a fresh clone reproduces MAE's behavior; a repo variable still overrides. `tests/test_mae_shape.py` pins the direction of all four.
+
+One thing that transfers unchanged and is worth keeping: MAE publishes `SUMMARY:TBD` while waiting on a speaker to supply a title, and `TBD` is already a recognised missing-title sentinel. So [title provenance](#title-provenance) flags those events exactly as it flagged ORFE's untitled ones.
 
 ## Features
 
 * Every-30-minutes + manual workflow (cron + `workflow_dispatch`)
 * Daily heartbeat check that writes a tiny keepalive commit only after 35 days without a `main` branch commit
-* GitHub Pages deployment of the latest production `events.json` for `https://upcoming.orfe.princeton.edu/events.json`
+* GitHub Pages deployment of the latest production `events.json`
 * ICS fetching with SHA256 change detection
-* Configurable field mapping and transformation
-* Title enrichment from event pages
+* Configurable field mapping and transformation, including two location strategies
+* Speaker enrichment from event pages, past Cloudflare's bot challenge
 * Content enrichment (optional)
-* Raw details extraction (optional)
+* Raw details extraction (optional), with abstract/bio pulled out of the detail panel
 * Failure streak tracking with issue creation
 * JSON schema validation
 * Title provenance (`titleSource` / `titleIsPlaceholder`) so consumers can tell a real title from a synthesized one
-* A newsletter variant feed scoped to the next edition's coverage window, on a configurable publication schedule
-* Hourly deadline watch that tracks events still awaiting a title in a single GitHub issue per edition
+* An inline feed view simulator for planning an editorial window
 * Unit tests and regression testing, runnable locally or in a container
 
 ## Usage
@@ -26,52 +50,48 @@ Canonical development and publishing both happen in `pu-orfe/upcoming`. Release-
 ### Release Assets
 
 **Production** (`latest`)
-- Canonical public URL: `https://github.com/pu-orfe/upcoming/releases/download/latest/events.json`
-- Landing page: `https://upcoming.orfe.princeton.edu/`
-- Custom-domain URLs:
-  - `https://upcoming.orfe.princeton.edu/events.json` — the full feed
-  - `https://upcoming.orfe.princeton.edu/events-newsletter.json` — [newsletter variant](#newsletter-variant): only the next edition's events
-- Published from `pu-orfe/upcoming`
+- Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json`
+- Pages URL: `https://pu-shd.github.io/mae-upcoming/events.json`
+- Landing page: `https://pu-shd.github.io/mae-upcoming/`
+- Published from `pu-shd/mae-upcoming`
 - Triggers: Scheduled (every 30 minutes via native GitHub Actions cron), manual
 - Purpose: Stable production feed
 
-**Landing page**
-- URL: `https://upcoming.orfe.princeton.edu/`
-- Style: a lightweight, Paper Tiger–inspired page that explains the feed endpoints and links back to the repository
-- Purpose: human-readable documentation for production, development, and test asset consumers
-- Carries a **What each record contains** field reference and an inline
-  [feed view simulator](#feed-view-simulator); `/dev/` carries the simulator too, pointed at the dev assets
-
 **Development** (`dev`)
-- Canonical public URL: `https://github.com/pu-orfe/upcoming/releases/download/dev/events.json`
-- Custom-domain landing page: `https://upcoming.orfe.princeton.edu/dev/`
-- Custom-domain asset URLs:
-  - `https://upcoming.orfe.princeton.edu/dev/events.json`
-  - `https://upcoming.orfe.princeton.edu/dev/events-nofpo.json`
-  - `https://upcoming.orfe.princeton.edu/dev/events-newsletter.json`
-  - `https://upcoming.orfe.princeton.edu/dev/test.json`
-- Published from `pu-orfe/upcoming`
+- Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/dev/events.json`
+- Pages URLs:
+  - `https://pu-shd.github.io/mae-upcoming/dev/events.json`
+  - `https://pu-shd.github.io/mae-upcoming/dev/events-nofpo.json` — the full feed minus the `Final Public Oral Exam` series
+  - `https://pu-shd.github.io/mae-upcoming/dev/test.json`
 - Triggers: Manual (`workflow_dispatch` on the development branch you want to test)
 - Purpose: Testing environment
 
 **Development test fixture** (`test.json`)
-- URL: `https://upcoming.orfe.princeton.edu/dev/test.json`
-- Contents: a static, realistic dummy feed based on the shape and style of previously served ORFE Upcoming assets
+- Contents: a static snapshot of a fully enriched MAE payload
 - Intended use: remote ingest and downstream integration testing when the live production or development feeds are empty or otherwise unsuitable as test input
+
+### A custom domain
+
+There is no CNAME yet, so Pages serves from `pu-shd.github.io/mae-upcoming`. To move to `upcoming.mae.princeton.edu`:
+
+1. Have MAE/OIT create the DNS record pointing at `pu-shd.github.io`.
+2. **Only then** set the `PAGES_CNAME` repo variable to `upcoming.mae.princeton.edu` and the `SITE_BASE_URL` variable to `https://upcoming.mae.princeton.edu`.
+
+The order matters. A `CNAME` file naming a host that does not resolve makes GitHub redirect the `github.io` URL to it, which takes the whole site down rather than degrading it. `actions/prepare-pages-artifact` writes no `CNAME` at all when the variable is empty.
 
 ### Landing pages
 
 The Pages site has two hand-written HTML pages:
 
-| Path | Serves | Edit this file |
-|------|--------|----------------|
-| `/` | `https://upcoming.orfe.princeton.edu/` | `site/index.html` |
-| `/dev/` | `https://upcoming.orfe.princeton.edu/dev/` | `site/dev/index.html` |
+| Path | Edit this file |
+|------|----------------|
+| `/` | `site/index.html` |
+| `/dev/` | `site/dev/index.html` |
 
 How to ship a change:
 
 - **`site/index.html`** (production landing): merge to `main`, then dispatch **`Publish Landing Pages`**. This workflow only rebuilds the Pages artifact (no ICS fetch, no JSON regeneration) and reuses the current `latest`/`dev` release assets for the JSON endpoints. Restricted to `main`.
-- **`site/dev/index.html`** (dev landing): dispatch **`ICS to JSON (Development)`** from the branch with your edits, with `force: true`. The dev workflow now publishes `site/index.html` from the branch too, so you can preview both landing pages together.
+- **`site/dev/index.html`** (dev landing): dispatch **`ICS to JSON (Development)`** from the branch with your edits, with `force: true`. The dev workflow publishes `site/index.html` from the branch too, so you can preview both landing pages together.
 
 The Pages tree is assembled by the local composite action `actions/prepare-pages-artifact`, which all three workflows share.
 
@@ -93,25 +113,141 @@ Both checks tolerate normal transients rather than paging on them:
 - An unreachable host is reported as `error`, never as a content problem.
 - Alerting requires two consecutive failing runs, so a single blip is never actionable.
 
+`tests/test_pipeline_contract.py` asserts that every path the Pages action publishes has a matching verify check, and that the verifier does *not* check a path nobody publishes — a stray check for the unpublished newsletter variant would report permanent drift.
+
 Run it locally with:
 ```bash
 GITHUB_TOKEN=$(gh auth token) python -m src.verify_published_feed \
-  --base-url https://upcoming.orfe.princeton.edu \
-  --repo pu-orfe/upcoming \
+  --base-url https://pu-shd.github.io/mae-upcoming \
+  --repo pu-shd/mae-upcoming \
   --check "events.json=latest:events.json" \
-  --check "events-newsletter.json=latest:events-newsletter.json" \
-  --ics-url "$ICS_URL"
+  --ics-url https://mae.princeton.edu/feeds/events/ical.ics
 ```
-Exit codes: `0` ok, `1` drift, `2` error, `3` ICS stale.
 
-### Legacy mirror
+### Local Development
 
-Mirroring to a legacy repository is **retired**. Nothing in CI writes to another repository any more:
+Generate JSON locally. The MAE mapping comes from `transform_config.json`, which `src.main` picks up from the working directory automatically:
 
-- the release-mirror step was removed from `ICS to JSON` and `ICS to JSON (Development)`
-- the `Mirror legacy repository` workflow, which force-pushed `main` and all tags on every push, was deleted
+```bash
+python -m src.main \
+  --ics-url "https://mae.princeton.edu/feeds/events/ical.ics" \
+  --output events.json
+```
 
-`src/mirror_release.py` and its tests are deliberately **kept but unwired**, so reintroduction is a workflow change rather than a rewrite. The module resolves a target repository's canonical name before mutating it and follows redirects on all HTTP methods, which matters because a renamed target otherwise fails `DELETE` with HTTP 307.
+With speaker enrichment — note all three settings, since MAE needs the inverted target *and* the bypass header:
+
+```bash
+ENRICH_TARGET_FIELD=speaker \
+ENRICH_SUBTITLE_SELECTOR='.field--name-field-ps-event-speaker-name, div.event-subtitle' \
+BOT_BYPASS_HEADER_VALUE=1 \
+python -m src.main --ics-url "$ICS_URL" --enrich-titles --enrich-raw-details --enrich-raw-extracts \
+  --output events.json
+```
+
+Validate output:
+```bash
+python tools/validate_json.py --schema schema/events.schema.json --data events.json
+```
+
+Update the committed example after a mapping change:
+```bash
+python -m src.main --ics-url "file://$PWD/examples/sample_input.example.ics" --print-only > /tmp/new.json
+mv /tmp/new.json examples/sample_output.expected.json
+pytest tests/test_transform.py::test_example_files_roundtrip -q
+```
+
+One-liners:
+- Generate and validate from your `ICS_URL`
+	```bash
+	make install
+	ICS_URL="https://mae.princeton.edu/feeds/events/ical.ics" make gen-enriched validate
+	```
+- Validate a previously generated file
+	```bash
+	make validate
+	```
+- Use the example ICS and validate (with enrichment and fallback applied)
+	```bash
+	make example-validate-enriched
+	```
+
+### Fixtures
+
+| File | Shape | Used by |
+|------|-------|---------|
+| `examples/sample_input.example.ics` | MAE's live feed, 9 events | the roundtrip test, `make example-*` |
+| `examples/sample_output.expected.json` | MAE, via `transform_config.json` | `test_example_files_roundtrip` |
+| `examples/dev_test_payload.json` | MAE, fully enriched | served as `/dev/test.json` |
+| `tests/fixtures/orfe_shape.ics` | ORFE's shape, 14 events | provenance, windowing and `dash`/escape coverage |
+| `tests/fixtures/transform_config.orfe.json` | ORFE's mapping | the tests above, pinned so the repo-root config cannot change what they see |
+
+The ORFE-shaped fixture is kept deliberately. The code now supports both shapes, so both need covering, and the tests that use it exercise machinery (edition windowing, provenance plumbing, schema) rather than anything ORFE-specific.
+
+## Title provenance
+
+Every event carries two extra fields:
+
+| Field | Meaning |
+|-------|---------|
+| `titleSource` | `enriched` (scraped) · `ics` (supplied by the feed — the normal case for MAE) · `fallback-speaker` · `fallback-template` · `fallback-series` |
+| `titleIsPlaceholder` | `true` for the three `fallback-*` sources — the title was synthesized here, not written by a person |
+
+The pipeline guarantees a non-empty `title` (`minLength: 1` in the schema), so an event awaiting a title still ships as something like `An MAE Departmental Seminars Talk by Dr. Maruthi Akella, UT Austin`. These fields are what let a consumer tell that apart from a real title and filter it out. Disable with `TITLE_PROVENANCE=0` or `--no-title-provenance`.
+
+Because MAE's titles come from the feed rather than from scraping, `ics` is the normal source here and `enriched` should not appear at all: enrichment writes to `speaker`, and deliberately does **not** stamp title provenance when its target is not `title`. Tagging a scraped speaker as an `enriched` title would report a still-`TBD` title as real, which is exactly the case provenance exists to catch.
+
+## Feed view simulator
+
+The landing pages embed a simulator so an editor can see a window before it arrives. Pick a **target publication date** and it filters the live feed in the browser, rendering the events in the window, which of them still carry a synthesised title, how long remains before the deadline, what falls outside the window and why, and the resulting JSON.
+
+It leads the home page and is linkable at `/#feed-simulator`.
+
+Everything else follows the standard schedule — deadline the Tuesday of the week before at noon, coverage from publication day through that week's Sunday — and the derived deadline and coverage window are shown immediately beneath the date, so the consequence of a change is visible without opening anything. An **Advanced** panel holds the publication time, an overridable deadline date/time, and an as-of clock.
+
+For MAE this is a planning view over `events.json`, not a preview of a separate published file — the [newsletter variant](#newsletter-variant-present-but-unwired) is not published here.
+
+Two properties matter for trusting what it shows:
+
+- **It filters the way the pipeline does.** Feed timestamps are naive Eastern wall clock, and because every timestamp shares one format and one zone, the simulator compares them as plain strings. That is not a shortcut — it is what makes the result independent of the viewer's own timezone. `tests/test_feed_simulator.py` asserts the JavaScript and `src/newsletter.py` agree on the window bounds and on which events fall inside them.
+- **It never writes anything.** It fetches a published feed and computes in the page.
+
+The view is deep-linkable, so a specific window can be sent to someone:
+
+```
+https://pu-shd.github.io/mae-upcoming/?pub=2026-09-21&deadline=2026-09-15&now=2026-09-14T13:00#feed-simulator
+```
+
+Query parameters: `pub`, `pubtime`, `deadline`, `deadlinetime`, `now` (and `feed` on `/dev/`, which offers a choice of dev feeds).
+
+The logic lives in `site/feed-simulator.js`, shared by both pages and deployed to the Pages root by `actions/prepare-pages-artifact`. Its core is exercised by `tests/js/` under `node --test`; `tests/test_pipeline_contract.py` asserts that any asset the pages reference is actually deployed, so the page cannot ship a 404.
+
+## Newsletter variant (present but unwired)
+
+ORFE publishes a second feed scoped to one newsletter edition, plus an hourly deadline watch that files a GitHub issue listing events still awaiting a title. **MAE publishes neither.** `src/newsletter.py`, `src/notify_missing_titles.py`, `schema/events-newsletter.schema.json` and all of their tests are kept and passing, but nothing in CI invokes them, and no `newsletter_config.json` is committed — ORFE's encoded ORFE's Monday-noon schedule and its Labor Day exceptions, which would be describing a schedule MAE never agreed to.
+
+`tests/test_pipeline_contract.py` pins that state, so switching it on is a visible decision rather than a side effect.
+
+To turn it on:
+
+1. Copy `newsletter_config.example.json` to `newsletter_config.json` and edit it to MAE's actual publication schedule and recess blackouts.
+2. Pass `--newsletter-output events-newsletter.json` and `--newsletter-config newsletter_config.json` in `ics_to_json.yml`, and restore the newsletter schema validation step.
+3. Set `include-newsletter: 'true'` on the `prepare-pages-artifact` calls and pass the newsletter file inputs.
+4. Re-add the edition to the skip gate. The coverage window is time-driven, not ICS-driven: it moves every publication day whether or not upstream changed. Keying the gate on the ICS hash alone would leave the variant on a stale edition through a quiet week, with no error anywhere.
+5. Add `--check "events-newsletter.json=latest:events-newsletter.json"` to `verify_published_feed.yml`, and update the contract tests that currently assert the feature is off.
+
+Experiment with it first without touching CI:
+
+```bash
+make newsletter-example     # runs against tests/fixtures/orfe_shape.ics at a pinned clock
+make newsletter-validate    # the above, then validate against both schemas
+python -m src.newsletter --config newsletter_config.example.json --json
+```
+
+The demo targets the ORFE-shaped fixture on purpose: its event dates straddle the pinned `--as-of`, whereas MAE's sample feed is dated 2026 and would select an empty edition.
+
+## Legacy mirror
+
+Mirroring to another repository is **retired** and was never wired up here. `src/mirror_release.py` and its tests are kept but unwired, so reintroduction is a workflow change rather than a rewrite. The module resolves a target repository's canonical name before mutating it and follows redirects on all HTTP methods, which matters because a renamed target otherwise fails `DELETE` with HTTP 307.
 
 To reintroduce it, add a step like this *after* the canonical release is published, and keep `continue-on-error` so a mirror problem can never block the Pages deploy:
 
@@ -128,244 +264,38 @@ To reintroduce it, add a step like this *after* the canonical release is publish
       --asset events.json --latest
 ```
 
-The `LEGACY_REPOSITORY_TOKEN` secret is left in place for that purpose.
-
-### Local Development
-
-Generate JSON locally:
-```bash
-python -m src.main --ics-url "https://example.com/calendar.ics" --output events.json
-```
-
-With enrichment:
-```bash
-ENRICH_TITLES=1 python -m src.main --ics-url "$ICS_URL" --limit 2 --print-only
-```
-
-Validate output:
-```bash
-Update examples after changes:
-```bash
-python -m src.main --ics-url file://$PWD/examples/sample_input.example.ics --print-only > /tmp/new.json
-# Edit /tmp/new.json to keep representative subset
-mv /tmp/new.json examples/sample_output.expected.json
-pytest tests/test_transform.py::test_example_files_roundtrip -q
-```
-
-One-liners:
-- Generate and validate from your ICS_URL
-	```bash
-	make install
-	ICS_URL="https://example.com/calendar.ics" make gen-enriched validate
-	```
-- Validate a previously generated file
-	```bash
-	make validate
-	```
-- Use the example ICS and validate (with enrichment and fallback applied)
-	```bash
-	make example-validate-enriched
-	```
-
-Alternatively invoke the validator directly:
-```bash
-python tools/validate_json.py --schema schema/events.schema.json --data events.json
-```
-
-## Newsletter variant
-
-The Engineering events newsletter publishes each Monday around noon — except Labor Day
-week, when it publishes Tuesday — and the deadline to submit an event is the Tuesday
-preceding publication at noon. Editors ingesting the full feed see every future event,
-including ones whose speaker has not yet supplied a title.
-
-Two things address that, and both are configuration rather than code, because the
-schedule changes between semesters.
-
-### Title provenance
-
-Every event carries two extra fields:
-
-| Field | Meaning |
-|-------|---------|
-| `titleSource` | `enriched` (scraped subtitle) · `ics` (supplied by the feed) · `fallback-speaker` · `fallback-template` · `fallback-series` |
-| `titleIsPlaceholder` | `true` for the three `fallback-*` sources — the title was synthesized here, not written by a person |
-
-The pipeline guarantees a non-empty `title` (`minLength: 1` in the schema), so an event
-awaiting a title still ships as something like `An ORFE Departmental Colloquia Talk`.
-These fields are what let an editor tell that apart from a real title and filter it out.
-Disable with `TITLE_PROVENANCE=0` or `--no-title-provenance`.
-
-### The variant feed
-
-`events-newsletter.json` holds only the events inside the next edition's coverage
-window — publication day 00:00 through that week's Sunday 23:59:59, local. `events.json`
-is untouched, so existing consumers are unaffected. Placeholder-titled events are kept
-and flagged, never dropped: an editor should see that a listing needs chasing, not find
-it silently missing.
-
-Each item additionally carries `newsletterEdition`, the stable id of the edition it was
-built for. That id is the **week-anchor Monday** even when publication shifts, so adding
-a Labor Day exception after the fact does not rename an edition or re-notify about it.
-
-```bash
-python -m src.main --ics-url "$ICS_URL" \
-  --output events.json \
-  --newsletter-output events-newsletter.json \
-  --newsletter-config newsletter_config.json
-```
-
-Inspect the resolved schedule at any instant:
-
-```bash
-python -m src.newsletter --json                       # the next edition
-python -m src.newsletter --which next-deadline --json # the one being submitted for
-python -m src.newsletter --as-of 2026-09-02T09:00:00 --json   # Labor Day week
-```
-
-### Schedule configuration
-
-`newsletter_config.json` (template: `newsletter_config.example.json`). Every bound is
-`anchor + offset_days @ time`, where the anchor is the week-start Monday or the
-publication date:
-
-| Bound | Anchor | Offset | Time | Normal week | Labor Day week 2026-09-07 |
-|-------|--------|--------|------|-------------|---------------------------|
-| publication | `week_start` | 0 | 12:00:00 | Mon | **Tue 09-08** (exception) |
-| deadline | `week_start` | −6 | 12:00:00 | preceding Tue | Tue 09-01 |
-| coverage start | `publication` | 0 | 00:00:00 | Mon | **Tue 09-08** |
-| coverage end | `week_start` | +6 | 23:59:59 | Sun | Sun 09-13 |
-
-Coverage *start* follows a publication shift; coverage *end* stays pinned to the week.
-Anchoring the deadline to the week start means moving publication does not drag the
-submission deadline with it — set `deadline_date` on the exception if you want it to.
-
-`schedules[]` entries are partial overrides merged onto `defaults`, selected by
-`effective_from`/`effective_to`, which is how a semester changes the deadline.
-`exceptions[]` are keyed by the week-anchor Monday. `blackouts[]` skip recess weeks.
-
-### Feed view simulator
-
-The landing pages embed a simulator so editors can see an edition before it exists. Pick a
-**week** and it filters the live feed in the browser, rendering exactly what the editorial
-system would ingest: the events in the window, which of them still carry a synthesised
-title, how long remains before the deadline, what falls outside the window and why, and the
-resulting JSON.
-
-It leads the home page and is linkable at
-[`/#feed-simulator`](https://upcoming.orfe.princeton.edu/#feed-simulator).
-
-One control covers the normal case: **Target publication date**. Everything else follows
-the standard schedule — deadline the Tuesday of the week before at noon, coverage from
-publication day through that week's Sunday — and the derived deadline and coverage window
-are shown immediately beneath the date, so the consequence of a change is visible without
-opening anything.
-
-Because the date is the publication date rather than a week, an edition that publishes on
-a Tuesday needs no special handling: pick the Tuesday. The window still anchors to that
-week, so Labor Day week reads as edition `2026-09-07` covering Tue 8 – Sun 13 September.
-
-An **Advanced** panel holds the publication time, an overridable deadline date/time, and an
-as-of clock. Picking a new publication date re-derives the deadline; moving the deadline on
-its own sticks until the publication date changes again. An override is labelled
-*overridden* in the readout and marks the panel *customised*.
-
-The headline figures — events in the window, how many still need a title, whether
-submissions are open — stay visible; the derived dates fold into a **Simulated edition
-details** accordion.
-
-Two properties matter for trusting what it shows:
-
-- **It filters the way the pipeline does.** Feed timestamps are naive Eastern wall clock, and
-  because every timestamp shares one format and one zone, the simulator compares them as
-  plain strings. That is not a shortcut &mdash; it is what makes the result independent of the
-  viewer's own timezone, so a reader in California sees exactly what WordPress sees.
-  `tests/test_feed_simulator.py` asserts the JavaScript and `src/newsletter.py` agree on the
-  window bounds and on which events fall inside them.
-- **It never writes anything.** It fetches a published feed and computes in the page.
-
-The view is deep-linkable, so a specific edition can be sent to someone:
-
-```
-https://upcoming.orfe.princeton.edu/?pub=2026-09-21&deadline=2026-09-15&now=2026-09-14T13:00#feed-simulator
-```
-
-Query parameters: `pub`, `pubtime`, `deadline`, `deadlinetime`, `now` (and `feed` on
-`/dev/`, which offers a choice of dev feeds).
-
-**It always reads a full feed, never `events-newsletter.json`.** The variant is the
-finished artifact for one edition; the simulator exists to preview editions that do not
-exist yet. Pointing it at the variant makes every other edition come back empty, which
-reads as "nothing is scheduled", so the variant is simply not offered as a source. The
-production page reads `events.json` and has no selector at all.
-
-The logic lives in `site/feed-simulator.js`, shared by both pages and deployed to the Pages
-root by `actions/prepare-pages-artifact`. Its core is exercised by `tests/js/` under
-`node --test`; `tests/test_pipeline_contract.py` asserts that any asset the pages reference is
-actually deployed, so the page cannot ship a 404.
-
-### Deadline watch
-
-`Newsletter Deadline Watch` (`.github/workflows/newsletter_deadline_watch.yml`) runs
-hourly and keeps **one GitHub issue per edition** listing events still carrying a
-placeholder title, labelled `newsletter-titles`. It closes the issue when every title
-has been supplied.
-
-The cron is deliberately coarse. The deadline lives in `newsletter_config.json`, and
-pinning a weekday and hour in cron would duplicate that schedule where the config cannot
-reach it; GitHub cron is UTC-only, so a fixed hour is wrong for half the year. The
-*script* decides whether a run falls inside a reminder lead window
-(`reminders.lead_hours`, default 72/48/24/4).
-
-Idempotency lives in the issue body, not in local state: the first line carries a marker
-naming the edition and the milestones already announced. Every run rewrites the body
-(which does not notify) and comments only when a new milestone is crossed (which does).
-Matching is on that marker, so renaming the issue does not break dedupe.
-
-`--target` picks the edition to report on. A deadline falls six days before its own
-publication, so two editions matter at once: the one about to publish, whose deadline has
-passed and whose gaps now need a late addition emailed to the editor, and the one
-contributors are currently submitting for. `auto` (the default) escalates to the former
-when it still has placeholders.
-
-```bash
-GITHUB_TOKEN=$(gh auth token) python -m src.notify_missing_titles \
-  --repo pu-orfe/upcoming \
-  --source release:latest:events.json \
-  --newsletter-config newsletter_config.json \
-  --dry-run
-```
-
-Exit codes: `0` reconciled · `1` deadline passed with placeholders remaining · `2` error
-· `3` **no events at all in the coverage window**. That last one exists because a wedged
-pipeline, a broken window filter and a timezone misread all otherwise present as "no
-placeholders, all good"; pass `--allow-empty-window` for a genuine recess.
-
 ## Tests
 
 ```bash
 make test                 # pytest locally
 make docker-test          # the same suite in a container
-make newsletter-validate  # end-to-end variant generation against the sample ICS
 make test-js              # the simulator's node suite on its own
+make newsletter-validate  # the unwired variant, end to end against the ORFE-shaped fixture
 make serve-site           # preview the landing pages and simulator locally
 ```
 
-The simulator's JavaScript is covered twice: `tests/js/feed-simulator.test.js` runs under
-`node --test`, and `tests/test_feed_simulator.py` runs that suite from pytest *and*
-cross-checks the JavaScript against `src/newsletter.py` on the same editions. Those pytest
-cases skip when `node` is absent (the slim container has none) but run on CI's Ubuntu
-runners; `test_simulator_asset_exists` fails rather than skips if the files go missing, so a
-deletion cannot hide behind a skip.
+`tests/test_mae_shape.py` is the file to read first. It covers the ORFE→MAE inversion end to end: both location strategies (including what the wrong one does to MAE input, so nobody "simplifies" the strategy away), the `SUMMARY`→`title` mapping and its comma convention, the enrichment target and its selector priority, and abstract/bio extraction across all four markup shapes MAE editors actually produce.
 
-`docker-compose` builds from `Dockerfile` and bind-mounts the working tree, so iterating
-needs no rebuild. `requirements.txt` carries `tzdata` as a `zoneinfo` fallback: the
-schedule arithmetic needs an IANA time zone database, Windows ships none, and a slim
-base image is not guaranteed to keep one across revisions. A test asserts the
-`America/New_York` lookup resolves, so a base image that drops it fails loudly.
+`tests/test_pipeline_contract.py` covers the CI wiring — that every published path is verified, that the workflows carry MAE's inverted defaults and the bypass header, that no workflow still points at ORFE's Pages domain, and that the newsletter stays unwired.
 
-Tests point at `tests/fixtures/newsletter_config.test.json`, never the live schedule — an
-editor changing a deadline must not break CI in a way that looks like a code regression.
+The simulator's JavaScript is covered twice: `tests/js/feed-simulator.test.js` runs under `node --test`, and `tests/test_feed_simulator.py` runs that suite from pytest *and* cross-checks the JavaScript against `src/newsletter.py` on the same editions. Those pytest cases skip when `node` is absent (the slim container has none) but run on CI's Ubuntu runners; `test_simulator_asset_exists` fails rather than skips if the files go missing, so a deletion cannot hide behind a skip.
+
+`docker-compose` builds from `Dockerfile` and bind-mounts the working tree, so iterating needs no rebuild. `requirements.txt` carries `tzdata` as a `zoneinfo` fallback: the schedule arithmetic needs an IANA time zone database, Windows ships none, and a slim base image is not guaranteed to keep one across revisions. A test asserts the `America/New_York` lookup resolves, so a base image that drops it fails loudly.
+
+Tests never read a live schedule — `tests/fixtures/newsletter_config.test.json` and `newsletter_config.example.json` are the only configs they touch, so an editor changing a deadline cannot break CI in a way that looks like a code regression. `tests/conftest.py` also clears every pipeline-steering environment variable per test, including `ENRICH_TARGET_FIELD` and `LOCATION_STRATEGY`, so a value exported in your shell cannot leak into assertions.
+
+### Abstract and bio extraction
+
+MAE editors produce four different markup shapes for the same labelled sections, and only the first was handled before this fork:
+
+```html
+<p>Abstract:<br/>Body follows the label.</p>          <!-- label and body in one block -->
+<p>Abstract: </p><p>Body in the next sibling.</p>      <!-- Enter, not Shift+Enter -->
+<p><strong>Abstract:</strong></p><p>Body.</p>          <!-- label wrapped for emphasis -->
+<p>Abstract:&nbsp; </p><p>Body.</p>                    <!-- non-breaking space padding -->
+```
+
+The extractor walks on to siblings when the label's own block holds no body, climbing to the nearest block-level ancestor first so an emphasis wrapper does not strand the walk. Because these bodies carry no heading between `Abstract:` and `Bio:`, the walk also stops at the next section label — otherwise an abstract swallows the bio that follows it. On MAE's live feed this took abstract extraction from 1 event out of 7 to 6 out of 6 that carry the label at all.
 
 ## Configuration reference (env vars and inputs)
 
@@ -375,46 +305,61 @@ These environment variables and workflow inputs control behavior at runtime.
 
 | Name | Scope | Type | Default | Purpose |
 |------|-------|------|---------|---------|
-| `ICS_URL` | CLI/CI | string | — | Upstream ICS feed URL. Supports http(s), `file://`, or local paths. |
+| `ICS_URL` | CLI/CI | string | `https://mae.princeton.edu/feeds/events/ical.ics` in CI | Upstream ICS feed URL. Supports http(s), `file://`, or local paths. |
 | `OUTPUT_FILE` | CLI/CI | string | `events.json` | Output JSON filename. |
 | `REPO_VARIABLE` | CLI/CI | string | `default` | Arbitrary variable passed to `manipulate_data` (currently unused). |
+| `PAGES_CNAME` | CI | string | — (empty) | Custom domain written to `pages/CNAME`. Leave unset until DNS exists; see [A custom domain](#a-custom-domain). |
+| `SITE_BASE_URL` | CI | string | `https://pu-shd.github.io/mae-upcoming` | Base URL the publish verifier samples. |
 
 ### Enrichment and fallback
 
 | Name | Scope | Type | Default | Purpose |
 |------|-------|------|---------|---------|
-| `ENRICH_TITLES` | CLI/CI | bool | `false` (manual CLI), `true` (scheduled CI, manual workflow default) | Enable subtitle scraping to populate `title` from each event detail page. |
-| `ENRICH_OVERWRITE` | CLI/CI | bool | `false` | When enriching, overwrite non-empty `title` values instead of only filling blanks. |
-| `ENRICH_DEBUG` | CLI/CI | bool | `false` | Verbose enrichment logging (fetch/skip/overwrite decisions). |
-| `FALLBACK_PREPEND_TEXT` | CLI/CI | string | — | Prefix template for titles filled from `speaker`. Supports `{series}` placeholder and `{a_an}` for automatic A/An selection based on how the next word is *pronounced*; missing keys render empty and whitespace is collapsed. Max length: 128 chars. Example: `{a_an} {series} Talk by` → `An ORFE Colloquium Talk by Alice`. |
-| `FALLBACK_INCLUDE_SPEAKER` | CLI/CI | bool | `true` | Include speaker name in fallback titles. Set to `0` to use only `FALLBACK_PREPEND_TEXT` template (e.g., `A {series} Talk` without speaker). CLI: `--no-fallback-speaker`. |
-| `BOT_BYPASS_HEADER_VALUE` | CLI/CI | string | `1` | Value sent as `x-wdsoit-bot-bypass` header during enrichment requests. |
+| `ENRICH_TITLES` | CLI/CI | bool | `false` (manual CLI), `true` (scheduled CI) | Enable page scraping. |
+| `ENRICH_TARGET_FIELD` | CLI/CI | string | `title`; **`speaker` in CI** | Event field the scraped value is written to. MAE's page carries the speaker, so CI sets `speaker`. Title provenance is only recorded when this is `title`. |
+| `ENRICH_SUBTITLE_SELECTOR` | CLI/CI | string | `div.event-subtitle`; **`.field--name-field-ps-event-speaker-name, div.event-subtitle` in CI** | CSS selector(s) to read. Comma-separated selectors are tried **left to right**, not resolved as one CSS group, so priority is explicit. |
+| `ENRICH_OVERWRITE` | CLI/CI | bool | `false` | When enriching, overwrite non-empty values instead of only filling blanks. |
+| `ENRICH_DEBUG` | CLI/CI | bool | `false` | Verbose enrichment logging (fetch/skip/overwrite decisions, with the selector and target field). |
+| `BOT_BYPASS_HEADER_VALUE` | CLI/CI | string | `1` | Value sent as `x-wdsoit-bot-bypass`. **Required for MAE** — the site 403s every other client. |
+| `FALLBACK_PREPEND_TEXT` | CLI/CI | string | `{a_an} {series} Talk by` in CI | Prefix template for titles filled from `speaker`. Supports `{series}` and `{a_an}` for automatic A/An selection based on how the next word is *pronounced*; missing keys render empty and whitespace is collapsed. Max length: 128 chars. |
+| `FALLBACK_INCLUDE_SPEAKER` | CLI/CI | bool | `true` | Include speaker name in fallback titles. MAE wants this on: a `TBD` title is far more useful as `An MAE Departmental Seminars Talk by <speaker>`. CLI: `--no-fallback-speaker`. |
 | `ENRICH_CONTENT` | CLI/CI | bool | `false` | Enable content scraping from the event page into `content` (fallback stays as ICS `DESCRIPTION` if not overwritten). |
 | `ENRICH_CONTENT_OVERWRITE` | CLI/CI | bool | `false` | Overwrite non-empty `content` when enriching. |
-| `ENRICH_CONTENT_FORMAT` | CLI/CI | enum | `text` | Output format for scraped content: `text` (plain), `markdown` (requires `markdownify`), or `html` (inner fragment). |
-| `ENRICH_RAW_DETAILS` | CLI/CI | bool | `false` | Enable raw HTML scraping from the event page into `rawEventDetails` (inner HTML of `.events-detail-main` container). |
+| `ENRICH_CONTENT_FORMAT` | CLI/CI | enum | `text` | Output format for scraped content: `text`, `markdown` (requires `markdownify`), or `html`. |
+| `ENRICH_RAW_DETAILS` | CLI/CI | bool | `false` | Enable raw HTML scraping into `rawEventDetails` (inner HTML of `.events-detail-main`). |
 | `ENRICH_RAW_DETAILS_OVERWRITE` | CLI/CI | bool | `false` | Overwrite non-empty `rawEventDetails` when enriching. |
-| `ENRICH_RAW_EXTRACTS` | CLI/CI | bool | `true` | Enable automatic extraction of `rawExtractAbstract` and `rawExtractBio` from `rawEventDetails` (requires raw details enrichment). |
-| `ENRICH_RAW_EXTRACTS_OVERWRITE` | CLI/CI | bool | `false` | Overwrite existing `rawExtractAbstract`/`rawExtractBio` values when extracting. |
+| `ENRICH_RAW_EXTRACTS` | CLI/CI | bool | `true` | Extract `rawExtractAbstract` and `rawExtractBio` from `rawEventDetails` (requires raw details enrichment). |
+| `ENRICH_RAW_EXTRACTS_OVERWRITE` | CLI/CI | bool | `false` | Overwrite existing extract values. |
 
 Boolean envs accept: `1,true,yes,on` (case-insensitive) for true.
 
-Each fill site records where the title came from in `titleSource`, and sets `titleIsPlaceholder` for the `fallback-*` ones — see [Title provenance](#title-provenance).
-
-Titles are guaranteed non-empty (enforced by `minLength: 1` in the schema). The fill order is: enriched subtitle → `FALLBACK_PREPEND_TEXT` template (+ speaker unless disabled) → a series-derived last resort such as `An Optimization Seminar Talk` (`A Seminar Talk` when the event has no series). The fallback pass runs even when title enrichment is disabled.
+Titles are guaranteed non-empty (enforced by `minLength: 1` in the schema). The fill order is: the feed's own `SUMMARY` → `FALLBACK_PREPEND_TEXT` template (+ speaker unless disabled) → a series-derived last resort such as `An MAE Departmental Seminars Talk` (`A Seminar Talk` when the event has no series). The fallback pass runs even when enrichment is disabled.
 
 ### Transform parameters
 
+Set these in `transform_config.json` (the repo root file, loaded automatically) or via `--config`. Template: `transform_config.example.json`.
+
+| Name | Type | MAE value | Purpose |
+|------|------|-----------|---------|
+| `field_mappings` | object | `name` → `title` | ICS attribute to output field. **This is the inversion.** |
+| `placeholders` | object | seeds `speaker` | Fields seeded before enrichment. MAE seeds `speaker`; ORFE seeded `title`. |
+| `location_strategy` | enum | `building-room` | `dash` reads `101 - Sherrerd Hall`; `building-room` reads `Bowen Hall 222` and `Engineering Quad J Wing/J223`. An unknown value falls back to `dash` rather than raising, so a typo degrades a location instead of stopping the feed. |
+| `escape_name_commas` | bool | `false` | Re-escape commas in the `SUMMARY`-derived field. Right for a speaker, wrong for a title. |
+| `target_timezone` | string | `America/New_York` | Datetime normalization target. Also `TARGET_TZ`. |
+| `mark_title_provenance` | bool | `true` | Record `titleSource` when the feed itself supplies a title. |
+
 | Name | Scope | Type | Default | Purpose |
 |------|-------|------|---------|---------|
+| `LOCATION_STRATEGY` | CLI/CI | enum | `dash` | Environment default for `location_strategy`; the config file wins. |
 | `TARGET_TZ` | CLI/CI | string | `America/New_York` | Target timezone for datetime normalization. |
 | `EXCLUDE_SERIES` | CLI/CI | string or JSON array | — | Comma-separated list or JSON array of series names to drop after transformation. |
+| `FPO_SERIES_NAME` | CI | string | `Final Public Oral Exam` | Series excluded from the dev `events-nofpo.json` variant. ORFE's `FPO` matches nothing in MAE's `CATEGORIES`, which would make the filtered variant identical to the full feed. |
 
-You can also provide a JSON config file via `--config` (copy from `transform_config.example.json`) to override mappings, placeholders, masks, etc.
+`EXCLUDE_SERIES` is deliberately left **unset** in production. ORFE drops its `FPO` events from the main feed; MAE's `Final Public Oral Exam` events carry real titles and are a meaningful fraction of a small feed (2 of 9 at the time of writing), so dropping them silently is an editorial decision for MAE to make rather than one to inherit. Set the repo variable to `Final Public Oral Exam` if MAE wants ORFE's behavior.
 
 ### Newsletter schedule and variant
 
-See [Newsletter variant](#newsletter-variant) for what these do.
+Unwired here — see [Newsletter variant](#newsletter-variant-present-but-unwired). The knobs still work if you invoke the modules directly.
 
 | Name | Scope | Type | Default | Purpose |
 |------|-------|------|---------|---------|
@@ -430,10 +375,7 @@ See [Newsletter variant](#newsletter-variant) for what these do.
 | `NEWSLETTER_REMINDER_LEAD_HOURS` | CLI/CI | comma-separated numbers | `72,48,24,4` | Hours before the deadline at which the watch announces a milestone. |
 | `TITLE_PROVENANCE` | CLI/CI | bool | `true` | Record `titleSource` / `titleIsPlaceholder`. CLI: `--no-title-provenance`. |
 
-Environment wins over the config file. `--as-of` (on `src.main`, `src.newsletter` and
-`src.notify_missing_titles`) pins the clock for testing and backfill; it deliberately has
-**no** environment default, since a stray repo variable would freeze the edition
-indefinitely, and `src.main` emits a `::warning::` whenever it is used.
+Environment wins over the config file. `--as-of` pins the clock for testing and backfill; it deliberately has **no** environment default, since a stray repo variable would freeze the edition indefinitely, and `src.main` emits a `::warning::` whenever it is used.
 
 ### GitHub Actions inputs (manual/scheduled)
 
@@ -441,22 +383,21 @@ indefinitely, and `src.main` emits a `::warning::` whenever it is used.
 |------|----------|------|---------|---------|
 | `force` | `ICS to JSON` | input | `false` | Force regeneration even if ICS content hash is unchanged. |
 | `enrich_titles` | `ICS to JSON` | input | `true` | Toggle enrichment on manual runs (scheduled runs always enrich). |
-| `enrich_raw_details` | `ICS to JSON` | input | `true` | Capture raw event details HTML on manual runs. |
-| `replace_latest` | `ICS to JSON` | input | `false` | Replace the Latest Events release instead of creating a separate manual release. |
 
 CLI flags mirror the envs: `--enrich-titles`, `--enrich-overwrite`, `--enrich-content`, `--enrich-content-overwrite`, `--enrich-raw-details`, `--enrich-raw-details-overwrite`, `--enrich-raw-extracts`.
 `--exclude-series` accepts comma-separated names and can be repeated; it mirrors `EXCLUDE_SERIES`.
 `--no-fallback-speaker` disables including speaker in fallback titles; mirrors `FALLBACK_INCLUDE_SPEAKER=0`.
-`--newsletter-output`, `--newsletter-config`, `--newsletter-edition-output` and `--as-of` control the newsletter variant; `--no-title-provenance` mirrors `TITLE_PROVENANCE=0`.
+`--config` selects a transform config; `--no-title-provenance` mirrors `TITLE_PROVENANCE=0`.
 
-`FALLBACK_PREPEND_TEXT` supports two placeholders: `{series}` inserts the event series name, and `{a_an}` auto-selects "A" or "An" (e.g., `{a_an} {series} Talk by` → "An ORFE Colloquium Talk by Alice").
+### The `{a_an}` placeholder
 
-`{a_an}` follows pronunciation rather than spelling, because spelling alone is wrong in both directions:
+`FALLBACK_PREPEND_TEXT` supports `{series}` and `{a_an}`, which auto-selects "A" or "An" following pronunciation rather than spelling, because spelling alone is wrong in both directions:
 
 | Series starts with | Article | Why |
 |---|---|---|
+| `MAE Departmental Seminars` | **An** | Spelled out, "em" |
+| `Final Public Oral Exam` | **A** | Ordinary word |
 | `S. S. Wilks Memorial Seminar` | **An** | Spelled out, "ess" |
-| `FPO` | **An** | Spelled out, "ef" |
 | `ORFE Department Colloquia` | **An** | Read as a word, "or-fee" |
 | `University Seminar` | **A** | Vowel letter, "yoo" sound |
 | `Hour-Long Seminar` | **An** | Consonant letter, vowel sound |

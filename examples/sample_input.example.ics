@@ -1,281 +1,196 @@
 BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:princeton-site-builder
-X-WR-CALNAME:Operations Research & Financial Engineering
+X-WR-CALNAME:Mechanical and Aerospace Engineering
 BEGIN:VEVENT
-UID:ps_events:11876:delta:0
-DTSTART:20250908T161500Z
+UID:ps_events:4741:delta:0
+DTSTART:20260824T130000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250908T171500Z
-URL:https://orfe.princeton.edu/events/2025/elynn-chen-new-york-university
-LOCATION:101 - Sherrerd
-SUMMARY:Elynn Chen\, New York University
+DTEND:20260824T150000Z
+URL:https://mae.princeton.edu/events/2026/influence-surfactants-air-liquid-
+ air-sheets-and-bubble-bursting
+LOCATION:Engineering Quad J Wing/J223
+SUMMARY:The influence of surfactants on air-liquid-air sheets and bubble bu
+ rsting
 CLASS:PUBLIC
-DESCRIPTION:Abstract: Most learning-and-decision systems assume a single\, 
- homogeneous response to actions. In practice—marketing\, healthcare\, op
- erations—outcomes vary across unobserved segments. This talk develops a 
- data-driven framework for decision making under latent heterogeneity\, whe
- re each individual belongs to an unknown group and group membership is pro
- babilistic and feature-driven. I will focus on a linear contextual bandit 
- model with a logistic “gating” rule for membership and group-specific 
- linear rewards\, and present an exploration-free\, phased algorithm that j
- ointly learns the gate and the
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250905T185131Z
+CATEGORIES:Final Public Oral Exam
+DTSTAMP:20260806T190729Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11856:delta:0
-DTSTART:20250911T203000Z
+UID:ps_events:4786:delta:0
+DTSTART:20260831T180000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250911T213000Z
-URL:https://orfe.princeton.edu/events/2025/navid-azizan-mit
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Navid Azizan\, MIT
+DTEND:20260831T200000Z
+URL:https://mae.princeton.edu/events/2026/winds-waves-and-wakes-investigati
+ ng-impact-ocean-waves-large-eddy-simulations-marine
+LOCATION:Engineering Quad J Wing/J223
+SUMMARY:Winds\, Waves\, and Wakes: Investigating the impact of ocean waves 
+ in large eddy simulations of marine atmospheric boundary layers and offsho
+ re wind farms
 CLASS:PUBLIC
-DESCRIPTION:AbstractIncorporating prior knowledge and domain-specific input
- -output requirements\, such as safety or stability\, as hard constraints i
- nto neural networks is a key enabler for their deployment in high-stakes a
- pplications. However\, existing methods often rely on soft penalties\, whi
- ch are insufficient. In this talk\, I will introduce hard-constrained neur
- al networks (HardNet)\, a general framework for enforcing hard\, input-dep
- endent constraints by appending a differentiable enforcement layer to any 
- neural network. This approach enables end-to-end training and\, crucially\
- , is
-CATEGORIES:Optimization Seminar
-DTSTAMP:20250909T184229Z
+CATEGORIES:Final Public Oral Exam
+DTSTAMP:20260820T152109Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11861:delta:0
-DTSTART:20250915T161500Z
+UID:ps_events:4746:delta:0
+DTSTART:20260925T190000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250915T171500Z
-URL:https://orfe.princeton.edu/events/2025/zhuoran-yang-22-yale-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Zhuoran Yang *22\, Yale University
+DTEND:20260925T200000Z
+URL:https://mae.princeton.edu/events/2026/industrial-electrification-techno
+ logies-and-interactions-energy-system
+LOCATION:Bowen Hall 222
+SUMMARY:Industrial Electrification: Technologies and Interactions with the 
+ Energy System
 CLASS:PUBLIC
-DESCRIPTION:AbstractWe study how multi-head softmax attention models are tr
- ained to perform in-context learning on linear data. Through extensive emp
- irical experiments and rigorous theoretical analysis\, we demystify the em
- ergence of elegant attention patterns: a diagonal and homogeneous pattern 
- in the key-query weights\, and a last-entry-only and zero-sum pattern in t
- he output-value weights.Remarkably\, these patterns consistently appear fr
- om gradient-based training starting from random initialization.Our analysi
- s reveals that such emergent structures enable multi-head attention to
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250910T185544Z
+DESCRIPTION:Abstract:&nbsp\;Electrifying energy-intensive industries is a k
+ ey component of reducing fossil fuel consumption and meeting decarbonizati
+ on goals\, but these end uses have been slower to transition than other se
+ ctors of the economy because of the diversity of industrial processes\, th
+ e heat and temperature requirements involved\, and the capital-intensive n
+ ature of existing infrastructure. The scale of transitioning this sector o
+ f the economy will also have significant impacts on the broader electricit
+ y sector\, including changes in demand patterns\, grid capacity requiremen
+ ts\, and
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260812T160139Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11891:delta:0
-DTSTART:20250922T161500Z
+UID:ps_events:4751:delta:0
+DTSTART:20261009T190000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250922T171500Z
-URL:https://orfe.princeton.edu/events/2025/xinghua-zheng-hong-kong-universi
- ty-science-and-technology
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Xinghua Zheng\, Hong Kong University of Science and Technology
+DTEND:20261009T200000Z
+URL:https://mae.princeton.edu/events/2026/mechanics-asteroid-exploration-re
+ cent-missions-and-future-plans
+LOCATION:Bowen Hall 222
+SUMMARY:The Mechanics of Asteroid Exploration: Recent Missions and Future P
+ lans
 CLASS:PUBLIC
-DESCRIPTION:AbstractWe develop a statistical learning framework for constru
- cting the stochastic discount factor (SDF) portfolio. To address the dimen
- sionality challenge\, we extend the MAXSER method (Ao\, Li\, and Zheng\, 2
- 019\, RFS) to allow for N &gt\;&gt\; T\; prove that it surely screens for 
- useful characteristics\; and establish asymptotic normality for the SDF lo
- ading estimates. Using 153 characteristics returns from cross-sectional re
- gressions\, our framework not only constructs an SDF with a high out-of-sa
- mple Sharpe ratio that successfully prices the cross-section of expected r
- eturns\, but also
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250909T182714Z
+DESCRIPTION:Abstract:The exploration of primitive bodies in the solar syste
+ m\, such as asteroids and comets\, is driven by scientific questions about
+  the early solar system\, long-term goals of utilizing primitive body reso
+ urces in space\, and the protection of the planet from hazardous impacts. 
+ Motivated by these concerns\, there have been many missions to these small
+  bodies over the last few decades\, with each one uncovering new details a
+ bout these bodies that further motivate their exploration\, while identify
+ ing new technologies that are needed to continue our progress. Despite pas
+ t success\, there
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260812T172356Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11826:delta:0
-DTSTART:20250923T203000Z
+UID:ps_events:4756:delta:0
+DTSTART:20261106T200000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250923T213000Z
-URL:https://orfe.princeton.edu/events/2025/dimitris-bertsimas-mit
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Dimitris Bertsimas\, MIT
+DTEND:20261106T210000Z
+URL:https://mae.princeton.edu/events/2026/current-understanding-and-unsolve
+ d-problems-thermal-conductivity-materials
+LOCATION:Bowen Hall 222
+SUMMARY:Current Understanding and Unsolved Problems in the Thermal Conducti
+ vity of Materials
 CLASS:PUBLIC
-CATEGORIES:Optimization Seminar,ORFE Department Colloquia
-DTSTAMP:20250827T195814Z
+DESCRIPTION:Abstract:Thermal conductivity is a basic and familiar property 
+ of materials: silver spoons conduct heat well and plastic does not. High t
+ hermal conductivity is desirable for heat exchangers and thermal managemen
+ t while low thermal conductivity is needed for thermal insulation. In rece
+ nt years\, the combined efforts of materials scientists\, engineers\, phys
+ icists\, and chemists have succeeded in pushing-back long-established limi
+ ts in the thermal conductivity of materials. Advances in experimental meth
+ ods have expanded the range of materials that can be studied with high thr
+ oughput and
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260814T223254Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11886:delta:0
-DTSTART:20250929T161500Z
+UID:ps_events:4761:delta:0
+DTSTART:20261113T200000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20250929T171500Z
-URL:https://orfe.princeton.edu/events/2025/zhimei-ren-university-pennsylvan
- ia
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Zhimei Ren\, University of Pennsylvania
+DTEND:20261113T210000Z
+URL:https://mae.princeton.edu/events/2026/tbd
+LOCATION:Bowen Hall 222
+SUMMARY:TBD
 CLASS:PUBLIC
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250905T185419Z
+DESCRIPTION:Abstract:TBDBio:Dr. Maruthi Akella is a professor in Aerospace 
+ Engineering and Engineering Mechanics at UT Austin where he holds the Cock
+ rell Family Endowed Chair in Engineering. His research encompasses coordin
+ ated systems\, learning\, adaptation\, and vision-based sensing. His resea
+ rch group contributed the onboard guidance algorithm for the Intuitive Mac
+ hines IM-1 mission – the first U.S. moon landing in more than 50 years s
+ ince the Apollo era. The major impacts of Dr. Akella’s work have been re
+ cognized through the AIAA Mechanics and Control of Flight Award\, the AAS
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260812T162500Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11931:delta:0
-DTSTART:20251001T203000Z
+UID:ps_events:4801:delta:0
+DTSTART:20261120T200000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20251001T213000Z
-URL:https://orfe.princeton.edu/events/2025/benjamin-zhang-university-north-
- carolina-chapel-hill
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Benjamin Zhang\, University of North Carolina\, Chapel Hill
+DTEND:20261120T210000Z
+URL:https://mae.princeton.edu/events/2026/nuclear-electric-propulsion-progr
+ ess-challenges-and-path-high-power-space-systems
+LOCATION:Bowen Hall
+SUMMARY:Nuclear Electric Propulsion: Progress\, Challenges\, and the Path t
+ o High-Power Space Systems
 CLASS:PUBLIC
-DESCRIPTION:AbstractParticle exchange methods such as parallel tempering (a
- lso known as replica exchange) are arguably the most effective computation
- al tools for approximating integrals with respect to high-dimensional Gibb
- s measures with complex structure. In particular\, exchange between replic
- as with different temperatures can greatly mitigate the so-called rare eve
- nt sampling problem. One can consider the Gibbs measure as the solution to
-  an eigenvalue problem with known (zero) eigenvalue. We describe how these
-  methods can be generalized to problems where the eigenvalue is not known&
- nbsp\;
-CATEGORIES:Stochastic Analysis Seminar
-DTSTAMP:20250909T182755Z
+DESCRIPTION:Abstract:Nuclear electric propulsion (NEP) offers the potential
+  to fundamentally expand the capability and reach of spacecraft\, but real
+ izing that potential requires overcoming significant challenges in reactor
+  technology\, power conversion and distribution\, thermal management\, ele
+ ctric propulsion\, and system integration. This seminar will examine the c
+ urrent state of NEP development\, highlighting recent progress while explo
+ ring the demanding requirements associated with operating high-power syste
+ ms continuously for years or even decades in the space environment.
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260824T163808Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11941:delta:0
-DTSTART:20251001T203000Z
+UID:ps_events:4766:delta:0
+DTSTART:20261204T200000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20251001T213000Z
-URL:https://orfe.princeton.edu/events/2025/benjamin-zhang-university-north-
- carolina-chapel-hill-0
-LOCATION:101 - Sherrerd Hal
-SUMMARY:Benjamin Zhang\, University of North Carolina Chapel Hill
+DTEND:20261204T210000Z
+URL:https://mae.princeton.edu/events/2026/local-maps-are-all-you-need
+LOCATION:Bowen Hall 222
+SUMMARY:Local Maps Are All You Need!
 CLASS:PUBLIC
-DESCRIPTION:Abstract: Particle exchange methods such as parallel tempering 
- (also known as replica exchange) are arguably the most effective computati
- onal tools for approximating integrals with respect to high-dimensional Gi
- bbs measures with complex structure. In particular\, exchange between repl
- icas with different temperatures can greatly mitigate the so-called rare e
- vent sampling problem. One can consider the Gibbs measure as the solution 
- to an eigenvalue problem with known (zero) eigenvalue. We describe how the
- se methods can be generalized to problems where the eigenvalue is not know
- n&nbsp\;a
-CATEGORIES:Stochastic Analysis Seminar
-DTSTAMP:20250915T142043Z
+DESCRIPTION:Abstract:&nbsp\;In robotics\, we have spent a lot of time build
+ ing really good maps from noisy sensor data. Who doesn’t like a nice\, c
+ risp\, globally consistent map? Over the last 20 years\, I have been explo
+ ring a paradigm to robot navigation that eschews such globally consistent 
+ maps in favour of graphs of local maps\, which are cheaper to construct\, 
+ store\, and query. These topometric maps enable so-called teach-and-repeat
+  (T&amp\;R) navigation. In this talk\, I will give a progress update on so
+ me of the new things we are doing with T&amp\;R including using different 
+ primary sensors\,
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260812T171816Z
 END:VEVENT
 BEGIN:VEVENT
-UID:ps_events:11841:delta:0
-DTSTART:20251007T203000Z
+UID:ps_events:4811:delta:0
+DTSTART:20270416T190000Z
 SEQUENCE:0
 TRANSP:TRANSPARENT
-DTEND:20251007T213000Z
-URL:https://orfe.princeton.edu/events/2025/milind-tambe-harvard-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Milind Tambe\, Harvard University
+DTEND:20270416T200000Z
+URL:https://mae.princeton.edu/events/2027/new-technology-new-astrophysics
+LOCATION:Bowen Hall
+SUMMARY:New Technology for New Astrophysics
 CLASS:PUBLIC
-DESCRIPTION:AbstractFor nearly two decades\, my team’s work on AI for Soc
- ial Impact (AI4SI) has focused on optimizing limited resources in critical
-  areas like public health\, conservation\, and public safety. In this talk
- \, I will highlight field test results from our deployed work in India\, d
- emonstrating measurable improvements in effectiveness for the world's two 
- largest mobile health programs for maternal and child care. We have levera
- ged innovative restless and collaborative bandit algorithms to achieve the
- se gains\, revealing new technical directions in the process. Additionally
- \, I will
-CATEGORIES:ORFE Department Colloquia
-DTSTAMP:20250909T182808Z
-END:VEVENT
-BEGIN:VEVENT
-UID:ps_events:11866:delta:0
-DTSTART:20251009T203000Z
-SEQUENCE:0
-TRANSP:TRANSPARENT
-DTEND:20251009T213000Z
-URL:https://orfe.princeton.edu/events/2025/antoine-deza-mcmaster-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Antoine Deza\, McMaster University
-CLASS:PUBLIC
-DESCRIPTION:A lattice $(d\,k)$-polytope is the convex hull of a set of poin
- ts in dimension $d$&nbsp\;whose coordinates are&nbsp\;integers ranging fro
- m $0$ to $k$.&nbsp\;We investigate the&nbsp\;smallest possible distance be
- tween two disjoint lattice $(d\,k)$-polytopes. A pair&nbsp\;of polytopes&n
- bsp\;achieving&nbsp\;this&nbsp\;minimal distance are called kissing polyto
- pes.&nbsp\;This question arises&nbsp\;in various contexts where the minima
- l distance between such polytopes&nbsp\;appears in complexity bounds for o
- ptimization algorithms.&nbsp\;We provide&nbsp\;nearly matching lower&nbsp\
- ;and upper bounds for this
-CATEGORIES:Optimization Seminar
-DTSTAMP:20250827T195752Z
-END:VEVENT
-BEGIN:VEVENT
-UID:ps_events:11871:delta:0
-DTSTART:20251027T161500Z
-SEQUENCE:0
-TRANSP:TRANSPARENT
-DTEND:20251027T171500Z
-URL:https://orfe.princeton.edu/events/2025/xuming-he-washington-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Xuming He\, Washington University
-CLASS:PUBLIC
-DESCRIPTION:AbstractExpected&nbsp\;shortfall\, measuring the average outcom
- e (e.g.\, portfolio loss) above a given quantile of its probability distri
- bution\, is a common financial risk measure. The same measure can be used 
- to characterize treatment effects in the tail of an outcome distribution\,
-  with applications ranging from policy evaluation in economics and public 
- health to biomedical investigations. Expected&nbsp\;shortfall&nbsp\;regres
- sion is a natural approach of modeling covariate-adjusted&nbsp\;expected&n
- bsp\;shortfalls. Because the&nbsp\;expected&nbsp\;shortfall&nbsp\;cannot b
- e written as a
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250909T182841Z
-END:VEVENT
-BEGIN:VEVENT
-UID:ps_events:11896:delta:0
-DTSTART:20251111T171500Z
-SEQUENCE:0
-TRANSP:TRANSPARENT
-DTEND:20251111T181500Z
-URL:https://orfe.princeton.edu/events/2025/yang-feng-new-york-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Yang Feng\, New York University
-CLASS:PUBLIC
-CATEGORIES:S. S. Wilks Memorial Seminar in Statistics
-DTSTAMP:20250821T135429Z
-END:VEVENT
-BEGIN:VEVENT
-UID:ps_events:11831:delta:0
-DTSTART:20251111T213000Z
-SEQUENCE:0
-TRANSP:TRANSPARENT
-DTEND:20251111T223000Z
-URL:https://orfe.princeton.edu/events/2025/vijay-vazirani-university-califo
- rnia-irvine
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Vijay Vazirani\, University of California\, Irvine
-CLASS:PUBLIC
-DESCRIPTION:AbstractFor a mechanism to be truly impactful\, it must combine
-  strong game-theoretic properties with computational efficiency -- a&nbsp\
- ;classic example is the Gale–Shapley (1962) stable matching algorithm. T
- his talk focuses on cardinal-utility matching markets\, for which the most
- &nbsp\;well&nbsp\;known mechanism is the pricing-based approach of Hylland
-  and Zeckhauser (1979). While this mechanism satisfies several desirable g
- ame-theoretic properties\, recent work has shown it to be computationally 
- intractable\, both in theory and in practice.This talk will review a serie
- s of
-CATEGORIES:ORFE Department Colloquia
-DTSTAMP:20250909T183818Z
-END:VEVENT
-BEGIN:VEVENT
-UID:ps_events:11906:delta:0
-DTSTART:20251118T213000Z
-SEQUENCE:0
-TRANSP:TRANSPARENT
-DTEND:20251118T223000Z
-URL:https://orfe.princeton.edu/events/2025/yann-lecun-new-york-university
-LOCATION:101 - Sherrerd Hall
-SUMMARY:Yann LeCun\, New York University
-CLASS:PUBLIC
-CATEGORIES:ORFE Department Colloquia
-DTSTAMP:20250905T185401Z
+DESCRIPTION:How is it possible that 1/4 of the Nobel Prizes in Physics sinc
+ e 2006 have been for astrophysics? All 5 of them came from new technologie
+ s\, and two required space observatories. I’ll review the breakthrough i
+ deas that grew into discoveries\, and suggest where future technologies mi
+ ght go.The JWST is working brilliantly\, and has found Little Red Dots\, t
+ he current mystery object. But there’s still no Earth 2.0. The DKIST sol
+ ar telescope with adaptive optics is working beautifully. &nbsp\;The Vera 
+ Rubin Telescope is online\, the Nancy Grace Roman Space Telescope will be 
+ launched just before this
+CATEGORIES:MAE Departmental Seminars
+DTSTAMP:20260828T191025Z
 END:VEVENT
 END:VCALENDAR

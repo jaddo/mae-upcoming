@@ -1,10 +1,14 @@
 """Event enrichment utilities.
 
-Currently supports fetching an event subtitle (<div class="event-subtitle">)
-from each event's detail page URL and inserting it into the `title` field.
+Fetches a value from each event's detail page and inserts it into a target
+field. Which element is read and which field it lands in are both configurable,
+because Princeton's site-builder units do not agree on where a talk's title
+lives: ORFE puts the speaker in the ICS SUMMARY and the title on the page in
+`.event-subtitle`, while MAE does the reverse. See `subtitle_selector` and
+`enrich_target_field`.
 
 Opt-in via CLI flag --enrich-titles or environment variable ENRICH_TITLES=1.
-Network failures or parsing misses leave the existing title unchanged.
+Network failures or parsing misses leave the existing value unchanged.
 """
 from __future__ import annotations
 
@@ -23,6 +27,44 @@ from .placeholders import TitleSource, is_missing_title, mark_title_source
 
 
 DEFAULT_TIMEOUT = 15
+
+#: Where ORFE's talk title lives. MAE has no such element on most pages.
+DEFAULT_SUBTITLE_SELECTOR = "div.event-subtitle"
+#: Field the scraped value lands in when nothing overrides it.
+DEFAULT_TARGET_FIELD = "title"
+
+
+def subtitle_selector() -> str:
+    """CSS selector(s) naming the page element enrichment reads.
+
+    Set ENRICH_SUBTITLE_SELECTOR to override. A comma-separated list is tried
+    left to right rather than handed to one `select_one` call, so a unit whose
+    pages carry more than one markup shape can name them in priority order --
+    CSS would otherwise resolve the group in document order instead.
+    """
+    raw = (os.getenv("ENRICH_SUBTITLE_SELECTOR", "") or "").strip()
+    return raw or DEFAULT_SUBTITLE_SELECTOR
+
+
+def enrich_target_field() -> str:
+    """Event field the scraped value is written to.
+
+    Set ENRICH_TARGET_FIELD to override. MAE uses `speaker`, since its ICS
+    SUMMARY already carries the title and the page carries the speaker.
+    """
+    raw = (os.getenv("ENRICH_TARGET_FIELD", "") or "").strip()
+    return raw or DEFAULT_TARGET_FIELD
+
+
+def _select_first(soup, selector: str):
+    """First element matching any selector in `selector`, in listed order."""
+    for one in (part.strip() for part in selector.split(",")):
+        if not one:
+            continue
+        found = soup.select_one(one)
+        if found is not None:
+            return found
+    return None
 
 
 @dataclass
@@ -58,11 +100,14 @@ class RawExtractEnrichmentStats:
     errors: int = 0
 
 
-def fetch_subtitle(url: str, timeout: int = DEFAULT_TIMEOUT) -> str:
-    """Fetch a page and return normalized subtitle text.
+def fetch_subtitle(
+    url: str, timeout: int = DEFAULT_TIMEOUT, selector: str | None = None
+) -> str:
+    """Fetch a page and return normalized text from the configured element.
 
     Adds a desktop User-Agent to avoid 403 responses and collapses internal
-    whitespace/newlines to single spaces.
+    whitespace/newlines to single spaces. `selector` defaults to
+    `subtitle_selector()`.
     """
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
@@ -85,10 +130,14 @@ def fetch_subtitle(url: str, timeout: int = DEFAULT_TIMEOUT) -> str:
             print(f"[enrich] bad-status url={url} code={getattr(resp,'status_code',None)} err={e}")
         return ""
     soup = BeautifulSoup(resp.text, "html.parser")
-    div = soup.find("div", class_="event-subtitle")
+    sel = selector or subtitle_selector()
+    div = _select_first(soup, sel)
     if not div:
         if debug:
-            print(f"[enrich] subtitle-missing url={url} length={len(resp.text)}")
+            print(
+                f"[enrich] subtitle-missing url={url} selector={sel!r} "
+                f"length={len(resp.text)}"
+            )
         return ""
     # get_text with separator to retain spacing, then collapse any runs
     raw = div.get_text(separator=" ", strip=True)
@@ -276,6 +325,37 @@ def fetch_raw_details_html(url: str, timeout: int = DEFAULT_TIMEOUT) -> str:
     return html
 
 
+#: Labels that open a new section in a hand-authored event body. Used to stop a
+#: sibling walk, since these bodies separate sections by label alone -- there is
+#: no heading between "Abstract:" and "Bio:" to break on.
+_SECTION_MARKERS = ("abstract:", "bio:", "biography:", "about the speaker")
+
+
+#: Block-level elements a sibling walk can meaningfully step through.
+_BLOCK_TAGS = ("p", "div", "li", "section", "article", "td")
+
+
+def _block_ancestor(node):
+    """Nearest block-level element at or above `node`.
+
+    A label wrapped for emphasis -- `<p><strong>Abstract:</strong></p>` -- puts
+    the marker on the `<strong>`, whose only sibling is nothing at all. The body
+    is the *paragraph's* next sibling, so the walk has to start from the block.
+    """
+    current = node
+    while current is not None and getattr(current, "name", None) not in _BLOCK_TAGS:
+        current = getattr(current, "parent", None)
+    return current if current is not None else node
+
+
+def _opens_new_section(node) -> bool:
+    """True when a sibling node begins a different labeled section."""
+    if not hasattr(node, "get_text"):
+        return False
+    text = node.get_text(strip=True).lower()
+    return bool(text) and text.startswith(_SECTION_MARKERS)
+
+
 def extract_abstract_from_raw_details(raw_html: str) -> str:
     """Extract abstract content from raw event details HTML.
 
@@ -342,13 +422,24 @@ def extract_abstract_from_raw_details(raw_html: str) -> str:
                 after_marker = text_content[abstract_pos + 9:].strip()  # 9 = len("abstract:")
                 if after_marker:
                     content_parts.append(after_marker)
-        # For colon markers, don't continue with siblings since content is in same element
-        current = None
+        # A marker paragraph that holds no body of its own means the editor
+        # pressed Enter rather than Shift+Enter, leaving "Abstract:" alone in its
+        # own <p> with the text in the next sibling. Walk on instead of
+        # returning empty; the walk stops at the next section label.
+        current = (
+            _block_ancestor(abstract_marker).next_sibling
+            if not content_parts
+            else None
+        )
 
-    # Collect content until we hit another header
+    # Collect content until we hit another header or a new section label
     while current:
         # Stop if we hit any header
         if hasattr(current, 'name') and current.name and current.name.startswith('h'):
+            break
+        # Stop before an unheaded sibling section, so an abstract walk does not
+        # swallow the bio that follows it.
+        if _opens_new_section(current):
             break
 
         # Add text content
@@ -428,13 +519,19 @@ def extract_bio_from_raw_details(raw_html: str) -> str:
                 after_marker = text_content[bio_pos + 4:].strip()  # 4 = len("bio:")
                 if after_marker:
                     content_parts.append(after_marker)
-        # For colon markers, don't continue with siblings since content is in same element
-        current = None
+        # See extract_abstract_from_raw_details: marker alone in its own <p>.
+        current = (
+            _block_ancestor(bio_marker).next_sibling if not content_parts else None
+        )
 
-    # Collect content until we hit another header
+    # Collect content until we hit another header or a new section label
     while current:
         # Stop if we hit any header
         if hasattr(current, 'name') and current.name and current.name.startswith('h'):
+            break
+        # Stop before an unheaded sibling section, so an abstract walk does not
+        # swallow the bio that follows it.
+        if _opens_new_section(current):
             break
 
         # Add text content
@@ -448,8 +545,16 @@ def extract_bio_from_raw_details(raw_html: str) -> str:
     return " ".join(content_parts).strip()
 
 
-def enrich_titles(events: List[Dict], enable: bool, session_cache: Optional[Dict[str, str]] = None, overwrite: bool = False, mark_provenance: bool = True) -> TitleEnrichmentStats:
-    """Mutate events list in-place adding subtitle to 'title' when available.
+def enrich_titles(
+    events: List[Dict],
+    enable: bool,
+    session_cache: Optional[Dict[str, str]] = None,
+    overwrite: bool = False,
+    mark_provenance: bool = True,
+    target_field: Optional[str] = None,
+    selector: Optional[str] = None,
+) -> TitleEnrichmentStats:
+    """Mutate events in-place, writing the scraped page value to a target field.
 
     Debugging:
         Set ENRICH_DEBUG=1 to emit detailed skip/update logging to stdout.
@@ -457,8 +562,13 @@ def enrich_titles(events: List[Dict], enable: bool, session_cache: Optional[Dict
     Args:
         events: list of event dicts with 'urlRef'.
         enable: if False, no-op.
-        session_cache: optional dict for caching url->subtitle.
+        session_cache: optional dict for caching url->value.
         mark_provenance: record titleSource/titleIsPlaceholder on updated events.
+            Only honored when the target field is 'title'; a value scraped into
+            'speaker' says nothing about where the title came from, and tagging
+            it 'enriched' would misreport a still-unknown title as a real one.
+        target_field: event key to populate (default `enrich_target_field()`).
+        selector: CSS selector(s) to read (default `subtitle_selector()`).
     Returns:
         TitleEnrichmentStats summarizing operation.
     """
@@ -467,6 +577,9 @@ def enrich_titles(events: List[Dict], enable: bool, session_cache: Optional[Dict
         return stats
     cache = session_cache if session_cache is not None else {}
     debug = os.getenv("ENRICH_DEBUG") in {"1", "true", "yes", "on"}
+    field = target_field or enrich_target_field()
+    sel = selector or subtitle_selector()
+    provenance_applies = mark_provenance and field == DEFAULT_TARGET_FIELD
     for idx, ev in enumerate(events):
         url = ev.get("urlRef") or ""
         if not url:
@@ -481,7 +594,7 @@ def enrich_titles(events: List[Dict], enable: bool, session_cache: Optional[Dict
                 print(f"[enrich] cache-hit url={url} subtitle_len={len(subtitle)}")
         else:
             try:
-                subtitle = fetch_subtitle(url)
+                subtitle = fetch_subtitle(url, selector=sel)
             except Exception as e:
                 stats.errors += 1
                 cache[url] = ""
@@ -495,21 +608,21 @@ def enrich_titles(events: List[Dict], enable: bool, session_cache: Optional[Dict
             if debug:
                 print(f"[enrich] skip(no-subtitle) url={url}")
             continue
-        existing = ev.get("title")
+        existing = ev.get(field)
         # Decide whether to overwrite
         should_overwrite = overwrite or existing is None or str(existing).strip() == ""
         if should_overwrite:
-            ev["title"] = subtitle
-            if mark_provenance:
+            ev[field] = subtitle
+            if provenance_applies:
                 mark_title_source(ev, TitleSource.ENRICHED)
             stats.updated += 1
             if debug:
                 action = "overwrote" if (existing and overwrite) else "updated"
-                print(f"[enrich] {action} url={url} new_title_len={len(subtitle)}")
+                print(f"[enrich] {action} url={url} field={field} new_len={len(subtitle)}")
         else:
             if debug:
                 snippet = str(existing)[:40].replace('\n', ' ')
-                print(f"[enrich] skip(has-title) url={url} existing_snippet={snippet!r} overwrite={overwrite}")
+                print(f"[enrich] skip(has-value) url={url} field={field} existing_snippet={snippet!r} overwrite={overwrite}")
     return stats
 
 

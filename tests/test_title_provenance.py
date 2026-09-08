@@ -11,7 +11,11 @@ from src.placeholders import TITLE_SOURCE_VALUES
 from src.transform import TransformConfig, load_config, transform_event
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLE_ICS = REPO_ROOT / "examples" / "sample_input.example.ics"
+# An ORFE-shaped feed: speaker in SUMMARY, title scraped from the page. These
+# tests cover provenance *machinery*, so they pin the config explicitly rather
+# than inheriting whatever transform_config.json sits in the working directory.
+SAMPLE_ICS = REPO_ROOT / "tests" / "fixtures" / "orfe_shape.ics"
+ORFE_CONFIG = REPO_ROOT / "tests" / "fixtures" / "transform_config.orfe.json"
 BASE_SCHEMA = REPO_ROOT / "schema" / "events.schema.json"
 
 
@@ -229,7 +233,8 @@ def test_load_config_round_trips_provenance_flag(tmp_path):
 
 def test_main_pipeline_gives_every_event_provenance(tmp_path, capsys):
     out = tmp_path / "events.json"
-    rc = main_mod.main(["--ics-url", str(SAMPLE_ICS), "--output", str(out)])
+    rc = main_mod.main(["--ics-url", str(SAMPLE_ICS), "--output", str(out),
+                   "--config", str(ORFE_CONFIG)])
     capsys.readouterr()
     assert rc == 0
     data = json.loads(out.read_text())
@@ -255,6 +260,7 @@ def test_main_pipeline_with_title_enrichment_marks_enriched(tmp_path, capsys, mo
     out = tmp_path / "events.json"
     rc = main_mod.main([
         "--ics-url", str(SAMPLE_ICS), "--output", str(out), "--enrich-titles",
+        "--config", str(ORFE_CONFIG),
     ])
     captured = capsys.readouterr()
     assert rc == 0, captured.err
@@ -277,7 +283,7 @@ def test_main_pipeline_with_enrichment_and_provenance_disabled(tmp_path, capsys,
     out = tmp_path / "events.json"
     rc = main_mod.main([
         "--ics-url", str(SAMPLE_ICS), "--output", str(out),
-        "--enrich-titles", "--no-title-provenance",
+        "--enrich-titles", "--no-title-provenance", "--config", str(ORFE_CONFIG),
     ])
     capsys.readouterr()
     assert rc == 0
@@ -289,7 +295,9 @@ def test_main_pipeline_with_enrichment_and_provenance_disabled(tmp_path, capsys,
 def test_generate_events_json_emits_nonempty_titles_and_provenance(tmp_path):
     """Regression: generate_events_json used to emit "" titles, violating minLength: 1."""
     out = tmp_path / "events.json"
-    main_mod.generate_events_json(ics_url=str(SAMPLE_ICS), output_path=out)
+    main_mod.generate_events_json(
+        ics_url=str(SAMPLE_ICS), output_path=out, config_path=str(ORFE_CONFIG)
+    )
     data = json.loads(out.read_text())
     assert len(data) == 14
     assert all(ev["title"].strip() for ev in data)
@@ -298,7 +306,8 @@ def test_generate_events_json_emits_nonempty_titles_and_provenance(tmp_path):
 
 def test_output_validates_against_schema_with_provenance(tmp_path):
     out = tmp_path / "events.json"
-    main_mod.main(["--ics-url", str(SAMPLE_ICS), "--output", str(out)])
+    main_mod.main(["--ics-url", str(SAMPLE_ICS), "--output", str(out),
+                   "--config", str(ORFE_CONFIG)])
     data = json.loads(out.read_text())
     assert len(data) > 0, "an empty array would validate trivially"
     validator = Draft7Validator(json.loads(BASE_SCHEMA.read_text()))

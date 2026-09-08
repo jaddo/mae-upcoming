@@ -36,11 +36,16 @@ def test_description_newline_literal_r():
 
 def test_example_files_roundtrip():
     # Uses the example ICS / expected JSON artifacts committed for validation.
+    # Both are MAE-shaped, and the config is the repo's live transform_config.json,
+    # so this is the one test that would catch a mapping change made there.
     import json, pathlib
-    base = pathlib.Path(__file__).resolve().parents[1] / "examples"
+    from src.transform import load_config
+    root = pathlib.Path(__file__).resolve().parents[1]
+    base = root / "examples"
     ics_path = base / "sample_input.example.ics"
     expected_path = base / "sample_output.expected.json"
-    cfg = TransformConfig(represent_newlines_as="literal_r")
+    cfg = load_config(root / "transform_config.json")
+    cfg.represent_newlines_as = "literal_r"
     with open(ics_path, "r", encoding="utf-8") as f:
         cal = Calendar(f.read())
     produced = transform_calendar(cal, cfg)
@@ -49,7 +54,7 @@ def test_example_files_roundtrip():
     # Compare only stable invariant subset of fields per event by guid.
     exp_index = {e["guid"]: e for e in expected}
     # Allow produced to contain additional events not yet listed in expected sample.
-    core_fields = ["guid", "startTime", "endTime", "urlRef", "location", "series", "speaker"]
+    core_fields = ["guid", "startTime", "endTime", "urlRef", "location", "series", "title"]
     for guid, ref in exp_index.items():
         match = next((e for e in produced if e["guid"] == guid), None)
         assert match, f"Expected guid {guid} not found in produced output"
@@ -68,3 +73,41 @@ def test_example_files_roundtrip():
                 assert same or swapped, f"Location mismatch guid={guid}: got={got_loc} expected={exp_loc}"
             else:
                 assert match.get(field) == ref.get(field), f"Mismatch field={field} guid={guid}"
+
+
+def test_orfe_shape_files_roundtrip():
+    """The same roundtrip over the ORFE-shaped fixture and mapping.
+
+    Guards the non-default code paths end to end: the `dash` location split and
+    comma re-escaping are no longer what this repo uses, so without this they
+    would only ever be exercised by unit tests.
+    """
+    import json, pathlib
+    from src.transform import load_config
+    root = pathlib.Path(__file__).resolve().parents[1]
+    base = root / "tests" / "fixtures"
+    cfg = load_config(base / "transform_config.orfe.json")
+    cfg.represent_newlines_as = "literal_r"
+    cal = Calendar((base / "orfe_shape.ics").read_text(encoding="utf-8"))
+    produced = transform_calendar(cal, cfg)
+    expected = json.loads((base / "orfe_shape.expected.json").read_text(encoding="utf-8"))
+
+    exp_index = {e["guid"]: e for e in expected}
+    core_fields = ["guid", "startTime", "endTime", "urlRef", "location", "series", "speaker"]
+    for guid, ref in exp_index.items():
+        match = next((e for e in produced if e["guid"] == guid), None)
+        assert match, f"Expected guid {guid} not found in produced output"
+        for field in core_fields:
+            if field == "series":
+                assert set((match.get(field) or "").split(",")) == set(
+                    (ref.get(field) or "").split(",")
+                ), f"Mismatch series guid={guid}"
+            else:
+                assert match.get(field) == ref.get(field), (
+                    f"Mismatch {field} guid={guid}"
+                )
+
+    # The two conventions this shape depends on, stated outright.
+    assert any("\\," in e["speaker"] for e in produced), "commas should be re-escaped"
+    assert all(e["location"]["name"] for e in produced if e["location"]["detail"])
+

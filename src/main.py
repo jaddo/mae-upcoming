@@ -179,21 +179,33 @@ def calendar_to_json(calendar: Calendar) -> list[dict]:  # legacy fallback
     return transform_calendar(calendar)
 
 
+def _resolve_config_path(explicit: str | os.PathLike | None) -> str | None:
+    """Config path to load: the explicit one, else transform_config.json in CWD."""
+    if explicit:
+        return str(explicit)
+    return "transform_config.json" if os.path.exists("transform_config.json") else None
+
+
 def generate_events_json(
     ics_url: str = ICS_URL,
     repo_variable: str = REPO_VARIABLE,
     output_path: str | os.PathLike = "events.json",
     exclude_series: Iterable[str] | None = None,
+    config_path: str | os.PathLike | None = None,
 ) -> Path:
     """Fetch, manipulate and write events JSON.
+
+    Honors the same transform config as `main()`. It used to hardcode
+    `TransformConfig()`, which silently gave library callers ORFE's field
+    mapping no matter what transform_config.json said -- harmless while CI only
+    ever called `main()`, wrong for anyone importing this.
 
     Returns the Path to the written file.
     """
     raw = fetch_ics(ics_url)
     calendar = Calendar(raw)
     manipulated = manipulate_data(calendar, repo_variable)
-    # Apply transformation config (future: load custom config)
-    cfg = TransformConfig()
+    cfg = load_config(_resolve_config_path(config_path))
     data = transform_calendar(manipulated, cfg)
     exclusions, _ = _resolve_series_exclusions(extra_values=exclude_series)
     if exclusions:
@@ -329,7 +341,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     ns = _parse_args(argv or sys.argv[1:])
     # Determine config path fallback
-    config_path = ns.config or ("transform_config.json" if os.path.exists("transform_config.json") else None)
+    config_path = _resolve_config_path(ns.config)
     raw = fetch_ics(ns.ics_url)
     calendar = Calendar(raw)
     manipulated = manipulate_data(calendar, ns.repo_variable)

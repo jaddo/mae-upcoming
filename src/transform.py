@@ -43,6 +43,20 @@ class TransformConfig:
         }
     )
     copies: Dict[str, str] = field(default_factory=dict)
+    # How to split LOCATION into name/detail. "dash" reads ORFE's
+    # "125 - Sherrerd Hall"; "building-room" reads MAE's "Bowen Hall 222".
+    # default_factory, not a bare os.getenv default: a dataclass field default is
+    # evaluated once at class creation, which would bake in whatever the
+    # environment held at import time and make the knob untestable.
+    location_strategy: str = field(
+        default_factory=lambda: os.getenv("LOCATION_STRATEGY", "dash")
+    )
+    # Re-escape commas in the SUMMARY-derived field. The ics library hands us
+    # unescaped text; ORFE's downstream ingester expects the backslashes back,
+    # which is right for a speaker ("Elynn Chen\, New York University") and
+    # wrong for a title ("Winds\, Waves\, and Wakes"). Off where SUMMARY maps
+    # to `title`.
+    escape_name_commas: bool = True
     # New configuration knobs
     join_categories: bool = True
     categories_delimiter: str = ","
@@ -72,15 +86,56 @@ def escape_semicolons(value: str) -> str:
     return re.sub(r"(?<!\\);", r"\\;", value)
 
 
-def parse_location(raw: str | None) -> dict:
-    if not raw:
-        return {"name": "", "id": "", "detail": ""}
+#: A trailing room designator: "222", "J223", "A10B". Anchored to the last
+#: whitespace-separated token so "Bowen Hall 222" splits but "Bowen Hall" does not.
+_ROOM_TOKEN = re.compile(r"^(?P<name>.*\S)\s+(?P<detail>[A-Z]?\d+[A-Za-z]?)$")
+
+
+def _parse_location_dash(raw: str) -> tuple[str, str]:
+    """ORFE's shape: "125 - Sherrerd Hall" -> detail "125", name "Sherrerd Hall"."""
     parts = [p.strip() for p in raw.split("-", 1)]
     if len(parts) == 2:
-        detail, name = parts
-    else:
-        detail = parts[0]
-        name = ""
+        return parts[1], parts[0]
+    return "", parts[0]
+
+
+def _parse_location_building_room(raw: str) -> tuple[str, str]:
+    """MAE's shape, which carries no separator at all.
+
+    "Engineering Quad J Wing/J223" -> name "Engineering Quad J Wing", detail "J223"
+    "Bowen Hall 222"               -> name "Bowen Hall",              detail "222"
+    "Bowen Hall"                   -> name "Bowen Hall",              detail ""
+
+    Anything that does not end in a room-shaped token becomes the name outright.
+    Guessing a split would be worse than declining to: the schema calls `name`
+    the venue, so an unsplittable venue belongs there whole rather than in
+    `detail`, which is what the dash strategy does to these values.
+    """
+    if "/" in raw:
+        name, _, detail = raw.rpartition("/")
+        return name.strip(), detail.strip()
+    match = _ROOM_TOKEN.match(raw)
+    if match:
+        return match.group("name"), match.group("detail")
+    return raw, ""
+
+
+_LOCATION_STRATEGIES = {
+    "dash": _parse_location_dash,
+    "building-room": _parse_location_building_room,
+}
+
+
+def parse_location(raw: str | None, strategy: str = "dash") -> dict:
+    """Split a raw ICS LOCATION into the schema's name/id/detail triple.
+
+    Unknown strategy names fall back to "dash" rather than raising: a typo in a
+    repo variable should degrade the location, not stop the feed.
+    """
+    if not raw:
+        return {"name": "", "id": "", "detail": ""}
+    parser = _LOCATION_STRATEGIES.get(strategy or "dash", _parse_location_dash)
+    name, detail = parser(raw.strip())
     return {"name": name, "id": "", "detail": detail}
 
 
@@ -124,7 +179,8 @@ def transform_event(event, cfg: TransformConfig) -> dict:
                 desc = clean_text(desc, collapse=True)
             out[target] = desc
         elif attr == "name":
-            out[target] = escape_commas(str(val))
+            text = str(val)
+            out[target] = escape_commas(text) if cfg.escape_name_commas else text
         elif attr == "categories":
             if isinstance(val, (set, list, tuple)):
                 if cfg.join_categories:
@@ -137,7 +193,9 @@ def transform_event(event, cfg: TransformConfig) -> dict:
             out[target] = str(val)
 
     # Location parsing
-    out["location"] = parse_location(getattr(event, "location", None))
+    out["location"] = parse_location(
+        getattr(event, "location", None), cfg.location_strategy
+    )
 
     # Placeholders
     for k, v in cfg.placeholders.items():
@@ -180,6 +238,8 @@ def load_config(path: str | os.PathLike | None) -> TransformConfig:
         "placeholders",
         "copies",
         "mark_title_provenance",
+        "location_strategy",
+        "escape_name_commas",
     ]:
         if field_name in data and data[field_name] is not None:
             setattr(cfg, field_name, data[field_name])

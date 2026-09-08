@@ -1,4 +1,4 @@
-# Test and tooling image for the ORFE upcoming-events pipeline.
+# Test and tooling image for the MAE upcoming-events pipeline.
 #
 #   docker-compose run --rm tests            # full pytest suite
 #   docker-compose run --rm newsletter-example  # end-to-end variant generation

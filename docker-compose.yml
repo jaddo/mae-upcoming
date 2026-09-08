@@ -18,6 +18,10 @@ services:
       - .:/app
     command: pytest -q
 
+  # Not part of `docker-test` (CI runs the `tests` service only). Demonstrates
+  # the unwired newsletter generator against the ORFE-shaped fixture, whose
+  # dates straddle the pinned --as-of; MAE's own sample feed is dated 2026 and
+  # would yield an empty edition.
   newsletter-example:
     extends:
       service: tests
@@ -25,7 +29,7 @@ services:
     # would be preserved as newlines and break the argument list.
     command: >
       sh -c "
-      python -m src.main --ics-url /app/examples/sample_input.example.ics --output /tmp/events.json --newsletter-output /tmp/events-newsletter.json --newsletter-config /app/tests/fixtures/newsletter_config.test.json --newsletter-edition-output /tmp/newsletter-edition.json --as-of 2025-09-05T12:00:00-04:00 &&
+      python -m src.main --ics-url /app/tests/fixtures/orfe_shape.ics --config /app/tests/fixtures/transform_config.orfe.json --output /tmp/events.json --newsletter-output /tmp/events-newsletter.json --newsletter-config /app/tests/fixtures/newsletter_config.test.json --newsletter-edition-output /tmp/newsletter-edition.json --as-of 2025-09-05T12:00:00-04:00 &&
       python tools/validate_json.py --schema schema/events-newsletter.schema.json --data /tmp/events-newsletter.json &&
       python tools/validate_json.py --schema schema/events.schema.json --data /tmp/events-newsletter.json &&
       cat /tmp/newsletter-edition.json

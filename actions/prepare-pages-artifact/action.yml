@@ -1,10 +1,15 @@
 name: 'Prepare and Upload Pages Artifact'
-description: 'Assembles the ORFE Upcoming Pages tree from site/** plus release assets, and uploads it for GitHub Pages deployment.'
+description: 'Assembles the MAE Upcoming Pages tree from site/** plus release assets, and uploads it for GitHub Pages deployment.'
 
 inputs:
   cname:
-    description: 'Value to write to pages/CNAME'
-    required: true
+    description: >-
+      Value to write to pages/CNAME. Leave empty to serve from the default
+      github.io URL. Do not set this before the DNS record exists: a CNAME file
+      naming an unresolvable host makes GitHub redirect the github.io URL to it,
+      taking the whole site down rather than degrading it.
+    required: false
+    default: ''
   prod-events-source:
     description: '"local" to copy prod-events-file, "release" to download events.json from the "latest" release'
     required: false
@@ -25,12 +30,21 @@ inputs:
     description: 'Path to a local events-nofpo.json to publish as /dev/events-nofpo.json (used when dev-events-source is "local")'
     required: false
     default: ''
+  include-newsletter:
+    description: >-
+      Publish the newsletter variant alongside the full feed. MAE does not ship
+      it (src/newsletter.py and its tests are present but unwired), so this
+      defaults to false. Turning it on also requires the generating workflow to
+      pass --newsletter-output and a newsletter_config.json describing MAE's
+      actual publication schedule.
+    required: false
+    default: 'false'
   prod-events-newsletter-file:
-    description: 'Path to a local events-newsletter.json to publish as /events-newsletter.json (used when prod-events-source is "local")'
+    description: 'Path to a local events-newsletter.json to publish as /events-newsletter.json (requires include-newsletter)'
     required: false
     default: ''
   dev-events-newsletter-file:
-    description: 'Path to a local events-newsletter.json to publish as /dev/events-newsletter.json (used when dev-events-source is "local")'
+    description: 'Path to a local events-newsletter.json to publish as /dev/events-newsletter.json (requires include-newsletter)'
     required: false
     default: ''
   github-token:
@@ -53,6 +67,7 @@ runs:
         DEV_SOURCE: ${{ inputs.dev-events-source }}
         DEV_FILE: ${{ inputs.dev-events-file }}
         DEV_NOFPO_FILE: ${{ inputs.dev-events-nofpo-file }}
+        INCLUDE_NEWSLETTER: ${{ inputs.include-newsletter }}
         PROD_NEWSLETTER_FILE: ${{ inputs.prod-events-newsletter-file }}
         DEV_NEWSLETTER_FILE: ${{ inputs.dev-events-newsletter-file }}
       run: |
@@ -67,12 +82,18 @@ runs:
 
         case "${PROD_SOURCE}" in
           local)
-            if [ -z "${PROD_FILE}" ] || [ -z "${PROD_NEWSLETTER_FILE}" ]; then
-              echo "prod-events-source=local requires prod-events-file and prod-events-newsletter-file" >&2
+            if [ -z "${PROD_FILE}" ]; then
+              echo "prod-events-source=local requires prod-events-file" >&2
               exit 1
             fi
             cp "${PROD_FILE}" pages/events.json
-            cp "${PROD_NEWSLETTER_FILE}" pages/events-newsletter.json
+            if [ "${INCLUDE_NEWSLETTER}" = "true" ]; then
+              if [ -z "${PROD_NEWSLETTER_FILE}" ]; then
+                echo "include-newsletter=true requires prod-events-newsletter-file" >&2
+                exit 1
+              fi
+              cp "${PROD_NEWSLETTER_FILE}" pages/events-newsletter.json
+            fi
             ;;
           release)
             if gh release view latest >/dev/null 2>&1; then
@@ -81,8 +102,10 @@ runs:
               # landing-page-only runs. Without this the next such run would
               # delete /events-newsletter.json from the live site. Tolerant of
               # absence so the first deploy before the asset exists still works.
-              gh release download latest --pattern 'events-newsletter.json' --dir pages \
-                || echo "::warning::latest release has no events-newsletter.json yet; /events-newsletter.json will be absent from this deploy"
+              if [ "${INCLUDE_NEWSLETTER}" = "true" ]; then
+                gh release download latest --pattern 'events-newsletter.json' --dir pages \
+                  || echo "::warning::latest release has no events-newsletter.json yet; /events-newsletter.json will be absent from this deploy"
+              fi
             else
               echo "::warning::latest release not found; /events.json will be absent from this deploy"
             fi
@@ -95,19 +118,27 @@ runs:
 
         case "${DEV_SOURCE}" in
           local)
-            if [ -z "${DEV_FILE}" ] || [ -z "${DEV_NOFPO_FILE}" ] || [ -z "${DEV_NEWSLETTER_FILE}" ]; then
-              echo "dev-events-source=local requires dev-events-file, dev-events-nofpo-file and dev-events-newsletter-file" >&2
+            if [ -z "${DEV_FILE}" ] || [ -z "${DEV_NOFPO_FILE}" ]; then
+              echo "dev-events-source=local requires dev-events-file and dev-events-nofpo-file" >&2
               exit 1
             fi
             cp "${DEV_FILE}" pages/dev/events.json
             cp "${DEV_NOFPO_FILE}" pages/dev/events-nofpo.json
-            cp "${DEV_NEWSLETTER_FILE}" pages/dev/events-newsletter.json
+            if [ "${INCLUDE_NEWSLETTER}" = "true" ]; then
+              if [ -z "${DEV_NEWSLETTER_FILE}" ]; then
+                echo "include-newsletter=true requires dev-events-newsletter-file" >&2
+                exit 1
+              fi
+              cp "${DEV_NEWSLETTER_FILE}" pages/dev/events-newsletter.json
+            fi
             ;;
           release)
             if gh release view dev >/dev/null 2>&1; then
               gh release download dev --pattern 'events.json' --pattern 'events-nofpo.json' --dir pages/dev
-              gh release download dev --pattern 'events-newsletter.json' --dir pages/dev \
-                || echo "::warning::dev release has no events-newsletter.json yet; /dev/events-newsletter.json will be absent from this deploy"
+              if [ "${INCLUDE_NEWSLETTER}" = "true" ]; then
+                gh release download dev --pattern 'events-newsletter.json' --dir pages/dev \
+                  || echo "::warning::dev release has no events-newsletter.json yet; /dev/events-newsletter.json will be absent from this deploy"
+              fi
             else
               echo "::warning::dev release not found; /dev/events.json and /dev/events-nofpo.json will be absent from this deploy"
             fi
@@ -119,7 +150,11 @@ runs:
         esac
 
         cp examples/dev_test_payload.json pages/dev/test.json
-        printf '%s\n' "${PAGES_CNAME}" > pages/CNAME
+        if [ -n "${PAGES_CNAME}" ]; then
+          printf '%s\n' "${PAGES_CNAME}" > pages/CNAME
+        else
+          echo "No cname given; serving from the default github.io URL."
+        fi
         touch pages/.nojekyll
 
     - name: Upload Pages artifact

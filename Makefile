@@ -5,11 +5,18 @@ OUTPUT ?= events.json
 SCHEMA := schema/events.schema.json
 SITE_PORT ?= 8730
 
-# Newsletter variant
+# Newsletter variant. Not published for MAE -- the generator and its tests are
+# here but unwired, so these targets exist for experimenting with the feature.
+# The config defaults to the example because no live MAE schedule is committed.
 NEWSLETTER_OUTPUT ?= events-newsletter.json
 NEWSLETTER_SCHEMA := schema/events-newsletter.schema.json
-NEWSLETTER_CONFIG ?= newsletter_config.json
+NEWSLETTER_CONFIG ?= newsletter_config.example.json
 TEST_NL_CONFIG := tests/fixtures/newsletter_config.test.json
+# The demo runs against the ORFE-shaped fixture, whose event dates straddle
+# AS_OF. examples/sample_input.example.ics is MAE's feed, dated 2026, so the
+# pinned clock below would select an empty edition from it.
+NL_EXAMPLE_ICS := tests/fixtures/orfe_shape.ics
+NL_EXAMPLE_CONFIG := tests/fixtures/transform_config.orfe.json
 # Pinned clock for reproducible example runs (a Friday; next edition is 2025-09-08)
 AS_OF ?= 2025-09-05T12:00:00-04:00
 
@@ -121,7 +128,8 @@ newsletter-edition:
 
 # Reproducible end-to-end run against the checked-in sample ICS.
 newsletter-example:
-	python -m src.main --ics-url "$(PWD)/examples/sample_input.example.ics" \
+	python -m src.main --ics-url "$(PWD)/$(NL_EXAMPLE_ICS)" \
+	  --config "$(NL_EXAMPLE_CONFIG)" \
 	  --output /tmp/events.json \
 	  --newsletter-output /tmp/events-newsletter.json \
 	  --newsletter-config "$(TEST_NL_CONFIG)" \
