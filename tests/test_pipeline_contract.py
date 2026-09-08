@@ -513,3 +513,43 @@ def test_a_workflow_runs_pytest_on_pull_requests():
 def test_container_test_path_is_exercised_in_ci():
     text = (WORKFLOW_DIR / "tests.yml").read_text(encoding="utf-8")
     assert "docker compose" in text and "tests" in text
+
+
+# --------------------------------------------------------------------------
+# Proof-of-concept labelling
+# --------------------------------------------------------------------------
+
+POC_LABEL = "Proof of concept"
+
+
+@pytest.mark.parametrize("page", ["index.html", "dev/index.html"])
+def test_both_pages_are_labelled_a_proof_of_concept(page):
+    """Partners are being shown this to evaluate an integration. If the label
+    goes missing, a demo endpoint reads as a service someone can depend on."""
+    html = (SITE_DIR / page).read_text(encoding="utf-8")
+    title = re.search(r"<title>(.*?)</title>", html, re.S)
+    assert title and POC_LABEL in title.group(1), f"{page}: title omits the label"
+    h1 = re.search(r"<h1>(.*?)</h1>", html, re.S)
+    assert h1 and POC_LABEL in h1.group(1), f"{page}: h1 omits the label"
+
+
+def test_home_page_states_the_stability_caveat():
+    html = (SITE_DIR / "index.html").read_text(encoding="utf-8")
+    banner = re.search(r'<p class="poc-banner">(.*?)</p>', html, re.S)
+    assert banner, "the home page has no proof-of-concept banner"
+    assert "not a production service" in banner.group(1)
+
+
+def test_no_page_promises_a_production_service():
+    """Wording drifts back toward "production" every time a page is edited."""
+    for page in ("index.html", "dev/index.html"):
+        html = (SITE_DIR / page).read_text(encoding="utf-8")
+        for phrase in ("canonical feed", "production feed", "Production release"):
+            assert phrase not in html, f"{page} still advertises a {phrase!r}"
+
+
+def test_readme_leads_with_the_proof_of_concept_label():
+    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+    first_heading = next(l for l in readme.splitlines() if l.startswith("# "))
+    assert POC_LABEL.lower() in first_heading.lower(), first_heading
+

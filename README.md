@@ -1,10 +1,14 @@
-# MAE Upcoming
+# MAE Upcoming (Proof of concept)
 
 Automated pipeline that fetches the Princeton [Mechanical and Aerospace Engineering](https://mae.princeton.edu/events) events ICS feed, applies configurable transformation, and publishes a stable JSON file as a GitHub Release asset and on GitHub Pages.
 
+> **This is a proof of concept, not a production service.** It exists to show campus partners what it takes to ingest a Princeton department's events as JSON, and to let them evaluate the record shape against their own site before committing to an integration. The feed is real and refreshes every 30 minutes, but endpoints, field names and hosting may change without notice, and nothing here is an official MAE service. Read it as a reference implementation to copy, not a URL to depend on.
+>
+> The demonstration is deliberately a *second* department rather than a rewrite: it shows which parts of an ingest pipeline transfer between two sites on the same platform and which parts do not. That distinction is the substance of the demo — see [How MAE differs from ORFE](#how-mae-differs-from-orfe).
+
 Forked from [`pu-orfe/upcoming`](https://github.com/pu-orfe/upcoming), which does the same job for ORFE. Both departments run on Princeton's `princeton-site-builder` platform and emit structurally identical ICS, so the pipeline, schema and tooling carry over unchanged. **What does not carry over is which field means what** — see [How MAE differs from ORFE](#how-mae-differs-from-orfe) before changing anything about titles, speakers or locations.
 
-Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Production refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest production payload is deployed to GitHub Pages.
+Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Scheduled refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest payload is deployed to GitHub Pages.
 
 ## How MAE differs from ORFE
 
@@ -49,13 +53,13 @@ One thing that transfers unchanged and is worth keeping: MAE publishes `SUMMARY:
 
 ### Release Assets
 
-**Production** (`latest`)
+**Demonstration feed** (`latest`)
 - Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json`
 - Pages URL: `https://pu-shd.github.io/mae-upcoming/events.json`
 - Landing page: `https://pu-shd.github.io/mae-upcoming/`
 - Published from `pu-shd/mae-upcoming`
 - Triggers: Scheduled (every 30 minutes via native GitHub Actions cron), manual
-- Purpose: Stable production feed
+- Purpose: the feed to read when evaluating the format. Stable in shape, not promised as an endpoint.
 
 **Development** (`dev`)
 - Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/dev/events.json`

@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MAE Upcoming Feed</title>
-  <meta name="description" content="Published MAE Upcoming feed assets for production and development consumers.">
+  <title>MAE Upcoming (Proof of concept)</title>
+  <meta name="description" content="MAE Upcoming (Proof of concept) &mdash; a demonstration feed showing campus partners how department events from a Princeton site can be ingested as JSON.">
   <style>
     :root {
       --brand: #e77500;
@@ -59,9 +59,30 @@
       letter-spacing: -0.03em;
       font-weight: 700;
     }
-    /* One line once there is room for it; still wraps on a narrow phone. */
+    /* One line once there is room for it; still wraps on a narrow phone. The
+       qualifier below is a block, so each line is measured on its own. */
     @media (min-width: 32rem) {
       h1 { white-space: nowrap; }
+    }
+    /* "MAE Upcoming (Proof of concept)" does not fit on one line at the h1's
+       upper clamp size, and this is a label rather than part of the name, so it
+       drops to its own smaller line instead of shrinking the whole title. */
+    .h1-qualifier {
+      display: block;
+      margin-top: 0.35rem;
+      font-size: 0.4em;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--brand);
+    }
+    .poc-banner {
+      max-width: 46rem;
+      margin: 1.5rem 0 0;
+      padding: 0.85rem 1.1rem;
+      border-left: 4px solid var(--brand);
+      background: rgba(231,117,0,0.12);
+      color: rgba(255,255,255,0.92);
+      font-size: 0.97rem;
     }
     .hero p {
       max-width: 46rem;
@@ -441,14 +462,24 @@
 <body>
   <header class="hero">
     <div class="container">
-      <h1>MAE Upcoming</h1>
+      <p class="eyebrow">Proof of concept</p>
+      <h1>MAE Upcoming <span class="h1-qualifier">(Proof of concept)</span></h1>
       <p>
-        This site republishes machine-readable <a href="https://mae.princeton.edu/events">MAE Upcoming Events</a> for ingest into campus services &mdash; among them the
-        School of Engineering events newsletter and the department pages on the Engineering site.
-        Production and development assets are available here for external consumers, integrations, and manual inspection.</p>
+        A demonstration of how a Princeton department&rsquo;s events can be republished as
+        machine-readable JSON for ingest by campus services &mdash; among them the School of
+        Engineering events newsletter and the department pages on the Engineering site. It
+        reads the live <a href="https://mae.princeton.edu/events">MAE events</a> calendar,
+        and exists so campus partners can evaluate the shape of the data against their own
+        site before committing to an integration.</p>
+      <p class="poc-banner">
+        <strong>This is a proof of concept, not a production service.</strong> The feed is
+        real and refreshes every 30 minutes, but the endpoints, the field names and the
+        hosting location may all change without notice, and nothing here is owned or
+        endorsed by MAE as an official departmental service. Treat it as a reference
+        implementation to read and copy, not a URL to depend on.</p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="#feed-simulator">Simulate an edition</a>
-        <a class="btn btn-quiet" href="./events.json">Production feed</a>
+        <a class="btn btn-quiet" href="./events.json">Sample feed</a>
         <a class="btn btn-quiet" href="./dev/">Development assets</a>
       </div>
     </div>
@@ -579,23 +610,25 @@
         <a href="https://github.com/pu-shd/mae-upcoming">Source repository</a>
       </div>
       <p class="lede">
-        The production JSON feed is generated from the upstream ICS source on a recurring GitHub Actions schedule.
-        Development assets are published on demand from whichever branch you dispatch the development workflow from.
+        The demonstration JSON feed is generated from the upstream ICS source on a recurring GitHub Actions
+        schedule. Development assets are published on demand from whichever branch you dispatch the development
+        workflow from. Everything on this page is part of the proof of concept &mdash; the endpoints exist so a
+        partner can fetch real records and see what an integration would receive.
       </p>
       <ul class="card-grid">
         <li>
           <article class="card">
-            <p class="meta">Production</p>
+            <p class="meta">Demonstration feed</p>
             <h3><a href="./events.json">/events.json</a></h3>
             <p>Every upcoming department event, refreshed from the upstream ICS source every 30 minutes.</p>
-            <p>This is the canonical feed. Each record carries the event&rsquo;s time, location, series,
+            <p>This is the feed to read when evaluating the format. Each record carries the event&rsquo;s time, location, series,
               speaker and abstract, plus <code>titleSource</code> and <code>titleIsPlaceholder</code>
               describing where its title came from.</p>
           </article>
         </li>
         <li>
           <article class="card">
-            <p class="meta">Production release asset</p>
+            <p class="meta">Demonstration release asset</p>
             <h3><a href="https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json">GitHub release asset</a></h3>
             <p>The same file, attached to the <code>latest</code> release for consumers that
               prefer GitHub downloads over the Pages domain.</p>
@@ -608,7 +641,7 @@
             <p class="meta">Development</p>
             <h3><a href="./dev/">/dev/ landing page</a></h3>
             <p>Links to the latest development feed assets published from a manually dispatched branch run.</p>
-            <p>Purpose: validation and pre-merge testing without disturbing the production release.</p>
+            <p>Purpose: validation and pre-merge testing without disturbing the <code>latest</code> release.</p>
           </article>
         </li>
         <li>
@@ -668,7 +701,7 @@
         </div>
         <div class="notes">
           <section class="note">
-            <h3>Production path</h3>
+            <h3>Scheduled path</h3>
             <p>
               The <code>ICS to JSON</code> workflow runs on <code>main</code> every 30 minutes, publishes the
               <code>latest</code> release asset, and deploys <code>/events.json</code> to Pages.

@@ -1,6 +1,7 @@
 # Copilot Instructions for `mae-upcoming`
 
 ## Project Purpose
+- **This repository is a proof of concept**, presented to campus partners who are evaluating how to ingest department events from Princeton sites. Public-facing language must say so: the landing pages, the README and the repo description all read "MAE Upcoming (Proof of concept)". Do not quietly promote it to production wording -- no "canonical production feed", no stability promises about endpoints or field names. `tests/test_pipeline_contract.py` pins the labelling on both landing pages.
 - Generate a normalized JSON events feed (`events.json`) from an upstream ICS calendar, with optional web-scraping enrichment for titles, content, and raw details.
 - Intended for automation (GitHub Actions) and manual CLI use; schema compliance enforced via `schema/events.schema.json`.
 - Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Legacy-repository mirroring is retired; `src/mirror_release.py` is retained, unwired, for possible reintroduction.
