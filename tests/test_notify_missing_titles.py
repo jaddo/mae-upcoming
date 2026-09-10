@@ -16,7 +16,7 @@ from src.newsletter import build_edition, load_newsletter_config
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TEST_CONFIG = REPO_ROOT / "tests" / "fixtures" / "newsletter_config.test.json"
 ET = ZoneInfo("America/New_York")
-REPO = "pu-orfe/upcoming"
+REPO = "pu-shd/mae-upcoming"
 EDITION_ID = "2025-09-15"
 
 
