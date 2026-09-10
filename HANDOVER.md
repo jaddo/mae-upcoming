@@ -109,10 +109,10 @@ defaults. The ongoing obligations are:
       ORFE" section, and accepts the transfer.
 - [ ] Confirm `@jaddo` accepts the transfer. GitHub requires the destination
       to accept an incoming repository; the transfer sits pending until they do.
-- [ ] Record the current repository variable values (Settings → Secrets and
-      variables → Actions → Variables). They are not recoverable from the code;
-      the workflows carry defaults, but the defaults are not necessarily what is
-      set. Save the list somewhere the incoming owner can read.
+- [x] Repository variable values recorded — see [Repository
+      variables](#repository-variables). Only four are set; everything else
+      runs on the workflows' inline defaults. Captured 2026-09-10, immediately
+      before the transfer.
 - [ ] Note the live endpoints so they can be compared after the move:
       `https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json`
       and `https://pu-shd.github.io/mae-upcoming/events.json`.
@@ -130,8 +130,10 @@ defaults. The ongoing obligations are:
 A transfer does not carry every setting with it, and the parts that silently do
 not carry over are the parts that fail quietly.
 
-- [ ] **Repository variables.** Confirm all 15 are present with the right
-      values (table below). Re-create any that are missing.
+- [ ] **Repository variables.** Only four are set (table below). Confirm
+      those four survived and re-create any that did not. The other eleven are
+      *deliberately unset* and resolve to the workflows' inline defaults —
+      absence is the intended state, not a gap to fill.
 - [ ] **Actions enabled**, and scheduled workflows are not disabled. Check that
       `ICS to JSON` has run within the last 30 minutes.
 - [ ] **GitHub Pages enabled**, source "GitHub Actions", and the
@@ -186,6 +188,28 @@ there is nothing to hand over out of band and nothing to rotate at transfer.
 
 Every one is optional: the workflows carry MAE's values as inline defaults so a
 fresh clone reproduces MAE's behaviour, and a variable overrides the default.
+
+**Actually set on `pu-shd/mae-upcoming` as of 2026-09-10** — these four, and
+only these four:
+
+| Variable | Value |
+|---|---|
+| `ICS_URL` | `https://mae.princeton.edu/feeds/events/ical.ics` |
+| `OUTPUT_FILE` | `events.json` |
+| `ENRICH_RAW_DETAILS` | `true` |
+| `ENRICH_RAW_DETAILS_OVERWRITE` | `false` |
+
+Everything below that is not in that table is running on its inline default.
+Two of those defaults matter:
+
+- **`SITE_BASE_URL` is unset**, so the verifier is using the workflow default
+  `https://pu-shd.github.io/mae-upcoming`. That host stops serving at transfer,
+  so `Verify Published Feed` will report `error` and — after two consecutive
+  runs — file an issue about a site the new owner does not own. Setting this
+  variable is the first thing to do after the transfer, not the last.
+- **`BOT_BYPASS_HEADER_VALUE` is unset**, so the default `1` is what actually
+  gets sent to `mae.princeton.edu`, and it works. There is no bypass token to
+  hand over.
 
 | Variable | Purpose if set |
 |---|---|
