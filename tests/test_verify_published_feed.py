@@ -5,8 +5,8 @@ import pytest
 
 from src import verify_published_feed as verify
 
-REPO = "pu-orfe/upcoming"
-BASE_URL = "https://upcoming.orfe.princeton.edu"
+REPO = "pu-shd/mae-upcoming"
+BASE_URL = "https://pu-shd.github.io/mae-upcoming"
 NOW = datetime(2026, 8, 7, 12, 0, tzinfo=timezone.utc)
 
 CURRENT = b'[{"guid": "fresh"}]'
@@ -195,7 +195,7 @@ def test_report_shows_both_digests(monkeypatch, check):
 
 
 ICS_LIVE = b"BEGIN:VCALENDAR\r\nX:new\r\nEND:VCALENDAR\r\n"
-ICS_URL = "https://orfe.princeton.edu/feeds/events/upcoming.ics"
+ICS_URL = "https://mae.princeton.edu/feeds/events/ical.ics"
 
 
 def _body(digest_hex: str) -> str:
@@ -323,7 +323,7 @@ def test_main_writes_stale_output_flag(monkeypatch, tmp_path):
     ],
 )
 def test_requests_send_an_explicit_user_agent(monkeypatch, fetch, url):
-    """orfe.princeton.edu answers 403 to urllib's default Python-urllib UA."""
+    """mae.princeton.edu answers 403 to urllib's default Python-urllib UA."""
     seen = {}
 
     class _Response:

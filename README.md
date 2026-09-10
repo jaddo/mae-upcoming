@@ -10,6 +10,14 @@ Forked from [`pu-orfe/upcoming`](https://github.com/pu-orfe/upcoming), which doe
 
 Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Scheduled refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest payload is deployed to GitHub Pages.
 
+## Ownership
+
+**Ownership is being transferred to Jeff Addo (`@jaddo`, `jaddo@princeton.edu`), and the repository is moving to `jaddo/mae-upcoming`.** Until that completes, `bino@princeton.edu` maintains it.
+
+[`HANDOVER.md`](HANDOVER.md) is the ownership record and the operations runbook: what runs on what schedule, every repository variable, how to respond when the feed goes stale, and the transfer checklist. Read it before relying on anything here — and before accepting the transfer.
+
+This remains a proof of concept. Nothing in a transfer of ownership makes it an official MAE service.
+
 ## How MAE differs from ORFE
 
 This is the important section. MAE and ORFE put the *same information in opposite places*, and because both feeds validate against the same schema, getting it wrong produces output that is schema-valid, error-free and useless — the talk title sitting in `speaker` and the speaker sitting in `title`.

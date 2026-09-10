@@ -1,4 +1,4 @@
-"""Verify that upcoming.orfe.princeton.edu serves the assets we published.
+"""Verify that the published site serves the assets we published.
 
 The pipeline can publish a release and still fail to deploy Pages, leaving the
 site serving an older payload while every workflow run reports success. This
@@ -42,9 +42,9 @@ DEFAULT_INTERVAL_SECONDS = 30
 DEFAULT_GRACE_MINUTES = 20
 REQUEST_TIMEOUT_SECONDS = 30
 
-# orfe.princeton.edu answers 403 to urllib's default ``Python-urllib/x.y``, so
+# mae.princeton.edu answers 403 to urllib's default ``Python-urllib/x.y``, so
 # every request identifies itself explicitly.
-USER_AGENT = "upcoming-feed-verifier/1.0 (+https://github.com/pu-orfe/upcoming)"
+USER_AGENT = "upcoming-feed-verifier/1.0 (+https://github.com/pu-shd/mae-upcoming)"
 
 STATUS_MATCH = "match"
 STATUS_PENDING = "pending"
@@ -366,7 +366,7 @@ def write_outputs(results: list[Result]) -> None:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--base-url", required=True, help="Public site root, e.g. https://upcoming.orfe.princeton.edu")
+    parser.add_argument("--base-url", required=True, help="Public site root, e.g. https://pu-shd.github.io/mae-upcoming")
     parser.add_argument("--repo", required=True, help="owner/name holding the release assets")
     parser.add_argument(
         "--check",

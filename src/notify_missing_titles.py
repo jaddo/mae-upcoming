@@ -45,9 +45,9 @@ API_ROOT = "https://api.github.com"
 API_VERSION = "2022-11-28"
 REQUEST_TIMEOUT_SECONDS = 30
 
-# orfe.princeton.edu and api.github.com both answer 403 to urllib's default
+# mae.princeton.edu and api.github.com both answer 403 to urllib's default
 # ``Python-urllib/x.y``, so every request identifies itself explicitly.
-USER_AGENT = "upcoming-newsletter-watch/1.0 (+https://github.com/pu-orfe/upcoming)"
+USER_AGENT = "upcoming-newsletter-watch/1.0 (+https://github.com/pu-shd/mae-upcoming)"
 
 DEFAULT_LABEL = "newsletter-titles"
 DEFAULT_LABEL_COLOR = "fbca04"
