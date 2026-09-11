@@ -47,7 +47,7 @@ REQUEST_TIMEOUT_SECONDS = 30
 
 # mae.princeton.edu and api.github.com both answer 403 to urllib's default
 # ``Python-urllib/x.y``, so every request identifies itself explicitly.
-USER_AGENT = "upcoming-newsletter-watch/1.0 (+https://github.com/pu-shd/mae-upcoming)"
+USER_AGENT = "upcoming-newsletter-watch/1.0 (+https://github.com/jaddo/mae-upcoming)"
 
 DEFAULT_LABEL = "newsletter-titles"
 DEFAULT_LABEL_COLOR = "fbca04"
