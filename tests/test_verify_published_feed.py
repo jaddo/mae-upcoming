@@ -5,8 +5,8 @@ import pytest
 
 from src import verify_published_feed as verify
 
-REPO = "pu-shd/mae-upcoming"
-BASE_URL = "https://pu-shd.github.io/mae-upcoming"
+REPO = "jaddo/mae-upcoming"
+BASE_URL = "https://jaddo.github.io/mae-upcoming"
 NOW = datetime(2026, 8, 7, 12, 0, tzinfo=timezone.utc)
 
 CURRENT = b'[{"guid": "fresh"}]'

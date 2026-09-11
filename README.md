@@ -8,11 +8,11 @@ Automated pipeline that fetches the Princeton [Mechanical and Aerospace Engineer
 
 Forked from [`pu-orfe/upcoming`](https://github.com/pu-orfe/upcoming), which does the same job for ORFE. Both departments run on Princeton's `princeton-site-builder` platform and emit structurally identical ICS, so the pipeline, schema and tooling carry over unchanged. **What does not carry over is which field means what** — see [How MAE differs from ORFE](#how-mae-differs-from-orfe) before changing anything about titles, speakers or locations.
 
-Canonical development and publishing both happen in `pu-shd/mae-upcoming`. Scheduled refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest payload is deployed to GitHub Pages.
+Canonical development and publishing both happen in this repository. Scheduled refreshes run on a native GitHub Actions schedule, a small heartbeat workflow keeps the schedules from aging out, and the latest payload is deployed to GitHub Pages.
 
 ## Ownership
 
-**Ownership is being transferred to Jeff Addo (`@jaddo`, `jaddo@princeton.edu`), and the repository is moving to `jaddo/mae-upcoming`.** Until that completes, `bino@princeton.edu` maintains it.
+**Ownership is being transferred to Jeff Addo (`@jaddo`, `jaddo@princeton.edu`).** The repository has left the `pu-shd` organization and is briefly at `pubino/mae-upcoming` while the transfer to `jaddo/mae-upcoming` is pending Jeff's acceptance; the URLs below name the destination, so they resolve once that lands. Until then, `bino@princeton.edu` maintains it.
 
 [`HANDOVER.md`](HANDOVER.md) is the ownership record and the operations runbook: what runs on what schedule, every repository variable, how to respond when the feed goes stale, and the transfer checklist. Read it before relying on anything here — and before accepting the transfer.
 
@@ -62,19 +62,19 @@ One thing that transfers unchanged and is worth keeping: MAE publishes `SUMMARY:
 ### Release Assets
 
 **Demonstration feed** (`latest`)
-- Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json`
-- Pages URL: `https://pu-shd.github.io/mae-upcoming/events.json`
-- Landing page: `https://pu-shd.github.io/mae-upcoming/`
-- Published from `pu-shd/mae-upcoming`
+- Canonical public URL: `https://github.com/jaddo/mae-upcoming/releases/download/latest/events.json`
+- Pages URL: `https://jaddo.github.io/mae-upcoming/events.json`
+- Landing page: `https://jaddo.github.io/mae-upcoming/`
+- Published from `jaddo/mae-upcoming`
 - Triggers: Scheduled (every 30 minutes via native GitHub Actions cron), manual
 - Purpose: the feed to read when evaluating the format. Stable in shape, not promised as an endpoint.
 
 **Development** (`dev`)
-- Canonical public URL: `https://github.com/pu-shd/mae-upcoming/releases/download/dev/events.json`
+- Canonical public URL: `https://github.com/jaddo/mae-upcoming/releases/download/dev/events.json`
 - Pages URLs:
-  - `https://pu-shd.github.io/mae-upcoming/dev/events.json`
-  - `https://pu-shd.github.io/mae-upcoming/dev/events-nofpo.json` — the full feed minus the `Final Public Oral Exam` series
-  - `https://pu-shd.github.io/mae-upcoming/dev/test.json`
+  - `https://jaddo.github.io/mae-upcoming/dev/events.json`
+  - `https://jaddo.github.io/mae-upcoming/dev/events-nofpo.json` — the full feed minus the `Final Public Oral Exam` series
+  - `https://jaddo.github.io/mae-upcoming/dev/test.json`
 - Triggers: Manual (`workflow_dispatch` on the development branch you want to test)
 - Purpose: Testing environment
 
@@ -84,9 +84,9 @@ One thing that transfers unchanged and is worth keeping: MAE publishes `SUMMARY:
 
 ### A custom domain
 
-There is no CNAME yet, so Pages serves from `pu-shd.github.io/mae-upcoming`. To move to `upcoming.mae.princeton.edu`:
+There is no CNAME yet, so Pages serves from `jaddo.github.io/mae-upcoming`. To move to `upcoming.mae.princeton.edu`:
 
-1. Have MAE/OIT create the DNS record pointing at `pu-shd.github.io`.
+1. Have MAE/OIT create the DNS record pointing at `jaddo.github.io`.
 2. **Only then** set the `PAGES_CNAME` repo variable to `upcoming.mae.princeton.edu` and the `SITE_BASE_URL` variable to `https://upcoming.mae.princeton.edu`.
 
 The order matters. A `CNAME` file naming a host that does not resolve makes GitHub redirect the `github.io` URL to it, which takes the whole site down rather than degrading it. `actions/prepare-pages-artifact` writes no `CNAME` at all when the variable is empty.
@@ -130,8 +130,8 @@ Both checks tolerate normal transients rather than paging on them:
 Run it locally with:
 ```bash
 GITHUB_TOKEN=$(gh auth token) python -m src.verify_published_feed \
-  --base-url https://pu-shd.github.io/mae-upcoming \
-  --repo pu-shd/mae-upcoming \
+  --base-url https://jaddo.github.io/mae-upcoming \
+  --repo jaddo/mae-upcoming \
   --check "events.json=latest:events.json" \
   --ics-url https://mae.princeton.edu/feeds/events/ical.ics
 ```
@@ -226,7 +226,7 @@ Two properties matter for trusting what it shows:
 The view is deep-linkable, so a specific window can be sent to someone:
 
 ```
-https://pu-shd.github.io/mae-upcoming/?pub=2026-09-21&deadline=2026-09-15&now=2026-09-14T13:00#feed-simulator
+https://jaddo.github.io/mae-upcoming/?pub=2026-09-21&deadline=2026-09-15&now=2026-09-14T13:00#feed-simulator
 ```
 
 Query parameters: `pub`, `pubtime`, `deadline`, `deadlinetime`, `now` (and `feed` on `/dev/`, which offers a choice of dev feeds).
@@ -321,7 +321,7 @@ These environment variables and workflow inputs control behavior at runtime.
 | `OUTPUT_FILE` | CLI/CI | string | `events.json` | Output JSON filename. |
 | `REPO_VARIABLE` | CLI/CI | string | `default` | Arbitrary variable passed to `manipulate_data` (currently unused). |
 | `PAGES_CNAME` | CI | string | — (empty) | Custom domain written to `pages/CNAME`. Leave unset until DNS exists; see [A custom domain](#a-custom-domain). |
-| `SITE_BASE_URL` | CI | string | `https://pu-shd.github.io/mae-upcoming` | Base URL the publish verifier samples. |
+| `SITE_BASE_URL` | CI | string | `https://jaddo.github.io/mae-upcoming` | Base URL the publish verifier samples. |
 
 ### Enrichment and fallback
 

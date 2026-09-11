@@ -39,7 +39,7 @@ jobs:
     env:
       # Defaults to the github.io URL. Set the SITE_BASE_URL repo variable once
       # upcoming.mae.princeton.edu exists in DNS and PAGES_CNAME is set.
-      SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'https://pu-shd.github.io/mae-upcoming' }}
+      SITE_BASE_URL: ${{ vars.SITE_BASE_URL || 'https://jaddo.github.io/mae-upcoming' }}
       ICS_URL: ${{ vars.ICS_URL || 'https://mae.princeton.edu/feeds/events/ical.ics' }}
     steps:
       - name: Checkout repo

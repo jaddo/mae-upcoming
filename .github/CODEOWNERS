@@ -2,11 +2,9 @@
 #
 # Ownership record and operations runbook: ../HANDOVER.md
 #
-# Jeff Addo (@jaddo) is the incoming owner; the repository is moving to
-# jaddo/mae-upcoming. Until that transfer is accepted, @jaddo has no write
-# access to pu-shd/mae-upcoming, so GitHub will report this entry as an unknown
-# owner and route nothing. That resolves itself on transfer — or immediately, if
-# @jaddo is added as a collaborator first.
+# Jeff Addo (@jaddo) is the incoming owner. He already has write access, which
+# is what CODEOWNERS requires, so these rules route now rather than only after
+# the transfer completes.
 
 * @jaddo
 

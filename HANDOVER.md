@@ -53,7 +53,7 @@ saying it stopped. That looks like a live service and behaves like a lie.
 
 | | |
 |---|---|
-| Repository | `pu-shd/mae-upcoming` (public) |
+| Repository | `pubino/mae-upcoming` (public) — **in transit**, see [Transfer checklist](#transfer-checklist) |
 | Outgoing owner | Michael Bino — `bino@princeton.edu` |
 | Incoming owner | Jeff Addo — `@jaddo`, `jaddo@princeton.edu` |
 | Destination | `jaddo/mae-upcoming` — a **personal account**, not an organization |
@@ -78,10 +78,10 @@ three things follow:
   can reassign it and no team retains access. That is the argument for either
   transferring into a Princeton org later or [retiring it
   cleanly](#a-note-to-the-new-owner) rather than leaving it running unowned.
-- **`.github/CODEOWNERS` names `@jaddo`**, which is only a valid owner once the
-  transfer is accepted (or once `@jaddo` is a collaborator here). Requiring
-  code-owner review additionally needs branch protection to be configured on
-  the destination; it does not carry over.
+- **`.github/CODEOWNERS` names `@jaddo`**, who already has write access, so the
+  rules resolve and route today. Actually *requiring* code-owner review needs
+  branch protection, which is configured per repository and does not survive a
+  transfer — so it has to be set up again on the destination if it is wanted.
 
 ## What the incoming owner is taking on
 
@@ -103,62 +103,103 @@ defaults. The ongoing obligations are:
 
 ## Transfer checklist
 
-### Before
+The move is happening in **two hops**, because GitHub's REST API refuses to
+transfer an organization's repository to anyone but the caller:
 
-- [ ] Jeff Addo reads this file and the README's "How MAE differs from
-      ORFE" section, and accepts the transfer.
-- [ ] Confirm `@jaddo` accepts the transfer. GitHub requires the destination
-      to accept an incoming repository; the transfer sits pending until they do.
-- [x] Repository variable values recorded — see [Repository
-      variables](#repository-variables). Only four are set; everything else
-      runs on the workflows' inline defaults. Captured 2026-09-10, immediately
-      before the transfer.
-- [ ] Note the live endpoints so they can be compared after the move:
-      `https://github.com/pu-shd/mae-upcoming/releases/download/latest/events.json`
-      and `https://pu-shd.github.io/mae-upcoming/events.json`.
+> `422` — "You can only transfer a repository from an organization to yourself
+> at this time."
 
-### During
+So `pu-shd` → `@jaddo` directly was not available. Hop 1 took it out of the
+organization to the outgoing owner's account; hop 2 is a personal-to-personal
+transfer, which is permitted and which Jeff accepts.
 
-- [ ] Transfer `pu-shd/mae-upcoming` → `@jaddo` (Settings → General →
-      Transfer ownership). It becomes `jaddo/mae-upcoming`.
-- [ ] Once accepted, `@jaddo` is the owner outright. Remove any collaborator
-      access that should not carry over, and add `bino@princeton.edu` as a
-      collaborator only if Jeff wants a fallback during the first weeks.
+### Hop 1 — `pu-shd` → `pubino` (done, 2026-09-11)
 
-### After — verify, do not assume
+- [x] Repository variable values recorded first — see [Repository
+      variables](#repository-variables).
+- [x] Transferred out of the organization.
+- [x] Verified afterward: all four repository variables survived, there are
+      still no secrets, all seven workflows are `active` and the scheduled
+      `ICS to JSON` and `Verify Published Feed` runs are succeeding, both
+      releases and their assets are intact, and Pages serves from
+      `pubino.github.io/mae-upcoming` with `events.json` matching the release
+      asset.
+- [x] `SITE_BASE_URL` set, because it was unset and the workflow default named
+      the `pu-shd` host that had just stopped serving. Left pointing at
+      `pubino` so the watchdog stays green while hop 2 is pending.
+- [x] URLs in this repository retargeted to `jaddo` ahead of hop 2, on purpose
+      — see [Why the URLs were changed first](#why-the-urls-were-changed-first).
 
-A transfer does not carry every setting with it, and the parts that silently do
-not carry over are the parts that fail quietly.
+Two things hop 1 changed that are worth knowing before hop 2:
 
-- [ ] **Repository variables.** Only four are set (table below). Confirm
-      those four survived and re-create any that did not. The other eleven are
-      *deliberately unset* and resolve to the workflows' inline defaults —
-      absence is the intended state, not a gap to fill.
-- [ ] **Actions enabled**, and scheduled workflows are not disabled. Check that
-      `ICS to JSON` has run within the last 30 minutes.
-- [ ] **GitHub Pages enabled**, source "GitHub Actions", and the
-      `github-pages` environment exists. Dispatch `Publish Landing Pages` and
-      confirm the site serves.
-- [ ] **Releases and assets** survived: tags `latest` and `dev` still carry
-      `events.json`, and the `latest` release body still carries its
-      `ICS_SHA256` line — `Verify Published Feed` compares against it.
-- [ ] **`SITE_BASE_URL`.** `Verify Published Feed` defaults to
-      `https://pu-shd.github.io/mae-upcoming`. After the move that is the wrong
-      host, and the verifier will report drift against the old site. Set the
-      variable to `https://jaddo.github.io/mae-upcoming`, or update the
-      default in the workflow.
-- [ ] **Hardcoded old-owner URLs.** Update the references listed under
-      [Old-owner references](#old-owner-references) below.
+- **Collaborator permissions are normalised down.** `@jaddo` held `admin` as an
+  invited collaborator and came out of the transfer with `write`. Write is
+  enough for CODEOWNERS, not for settings.
+- **Organization-derived access disappears.** `orfeit` had admin through the
+  organization and has none now. Only direct collaborator grants survive.
+
+### Hop 2 — `pubino` → `@jaddo` (pending)
+
+- [ ] Jeff reads this file and the README's "How MAE differs from ORFE".
+- [ ] Initiate the transfer. It sits pending until `@jaddo` accepts; GitHub
+      requires the destination account to accept an incoming repository.
+- [ ] **Delete the `SITE_BASE_URL` variable** once Pages is live at
+      `jaddo.github.io/mae-upcoming`. The workflow default now names that host,
+      so deleting the variable is what makes the default take effect. Keeping a
+      variable that merely restates the default is how the two drift apart
+      later.
+- [ ] Confirm the same list hop 1 verified: variables, workflow states,
+      releases, Pages, and a `Verify Published Feed` run reporting `match`.
 - [ ] Dispatch `ICS to JSON` with `force: true` and confirm a fresh
       `events.json` reaches both the release and Pages.
-- [ ] Update this file: move Jeff Addo into "Outgoing owner" only once
-      the next handover happens, and delete the placeholder banner.
+- [ ] Tell anyone consuming the **Pages** URL directly. See below — this is the
+      one that does not fail loudly.
+- [ ] Update this file's "Current status" table and move Jeff into "Outgoing
+      owner" only when the *next* handover happens.
 
-GitHub redirects the old repository URL, and release-download URLs follow the
-redirect, so existing consumers of the `latest` asset should keep working. The
-`pu-shd.github.io/mae-upcoming` Pages URL does **not** redirect; it stops
-serving, and the site moves to `jaddo.github.io/mae-upcoming`. Anyone who
-wired up the Pages URL has to be told directly.
+### What redirects, and what does not
+
+Git operations and the repository's web URLs redirect after a transfer —
+GitHub's documentation is explicit that `git clone`, `git fetch` and `git push`
+against the old location follow through to the new one — and release-download
+URLs ride on that, so consumers of the `latest` asset keep working.
+
+**GitHub Pages does not redirect, and it does not fail cleanly either.** This
+was observed directly during hop 1: for a window after the transfer the old
+`pu-shd.github.io/mae-upcoming` kept serving its *last build*, so a consumer
+pointed at it saw stale-but-plausible JSON rather than an error, and the
+watchdog — still checking that host at the time — reported `match`. The host
+began returning `404` later the same day.
+
+That is the worst shape a failure can take here: no error anywhere, just frozen
+data that looks current. It is also why anyone using the Pages URL has to be
+told at transfer time rather than left to notice.
+
+### Why the URLs were changed first
+
+The outgoing owner is **retained as a collaborator** after a personal-to-personal
+transfer, which GitHub documents:
+
+> "The original owner of the repository is added as a collaborator on the
+> transferred repository."
+
+What it does not document is at which permission level, and hop 1's evidence is
+that transfers normalise collaborators down to `write`. Write access can still
+change files through a pull request; it cannot change repository settings —
+variables, secrets, Pages configuration.
+
+So every URL was retargeted to `jaddo` **before** hop 2, while admin was still
+in hand, and the verifier's base URL was moved out of a repository variable and
+into the workflow's inline default. Anything that has to be corrected later
+now lives in a file, where retained write access is enough, rather than in a
+settings field that needs admin. That is the same reasoning the rest of this
+repository already follows: MAE's values are inline defaults so a fresh clone
+reproduces MAE's behaviour.
+
+The cost of that ordering is a window — while hop 2 is pending, the published
+landing page links to `jaddo` URLs that do not resolve yet. That was the
+accepted trade: a short spell of dead links, against the risk of not being able
+to fix the URLs at all.
 
 ## What runs, and when
 
@@ -189,8 +230,8 @@ there is nothing to hand over out of band and nothing to rotate at transfer.
 Every one is optional: the workflows carry MAE's values as inline defaults so a
 fresh clone reproduces MAE's behaviour, and a variable overrides the default.
 
-**Actually set on `pu-shd/mae-upcoming` as of 2026-09-10** — these four, and
-only these four:
+**Actually set, as of 2026-09-11** — four inherited from `pu-shd`, plus
+`SITE_BASE_URL`, which hop 1 made necessary:
 
 | Variable | Value |
 |---|---|
@@ -198,15 +239,19 @@ only these four:
 | `OUTPUT_FILE` | `events.json` |
 | `ENRICH_RAW_DETAILS` | `true` |
 | `ENRICH_RAW_DETAILS_OVERWRITE` | `false` |
+| `SITE_BASE_URL` | `https://pubino.github.io/mae-upcoming` — **temporary**, delete it after hop 2 |
 
-Everything below that is not in that table is running on its inline default.
-Two of those defaults matter:
+Everything not in that table is running on its inline default, and two of those
+defaults matter:
 
-- **`SITE_BASE_URL` is unset**, so the verifier is using the workflow default
-  `https://pu-shd.github.io/mae-upcoming`. That host stops serving at transfer,
-  so `Verify Published Feed` will report `error` and — after two consecutive
-  runs — file an issue about a site the new owner does not own. Setting this
-  variable is the first thing to do after the transfer, not the last.
+- **`SITE_BASE_URL`** was unset until hop 1, so the verifier was checking the
+  workflow default — which named the `pu-shd` host that had just stopped
+  serving. An unreachable base URL is reported as `error`, an `error` fails the
+  step, and two consecutive failing runs file a `feed-drift` issue, so this was
+  roughly an hour away from paging about a site nobody owned. The variable now
+  pins the host that actually exists during the pending window; the workflow
+  default already names `jaddo`, so **delete the variable once hop 2 lands**
+  rather than updating it.
 - **`BOT_BYPASS_HEADER_VALUE` is unset**, so the default `1` is what actually
   gets sent to `mae.princeton.edu`, and it works. There is no bypass token to
   hand over.
@@ -270,19 +315,28 @@ rather than a side effect.
 - **Legacy mirroring** — retired. `src/mirror_release.py` is kept, unwired.
 - **Custom domain** — `upcoming.mae.princeton.edu` does not exist in DNS.
 
-## Old-owner references
+## Owner references in the tree
 
-Update these when the repository moves. Nothing here breaks the pipeline, but
-each one misdirects a reader or a server admin.
+All of these were retargeted to `jaddo` on 2026-09-11, before hop 2, for the
+reason given under [Why the URLs were changed
+first](#why-the-urls-were-changed-first). The table is kept as the list to walk
+if ownership ever changes again — none of it breaks the pipeline, but each
+entry misdirects a reader or a server admin.
 
-| File | What to change |
+| File | What it carries |
 |---|---|
-| `README.md` | 15 `pu-shd` references — release URLs, Pages URLs, the local verify command |
-| `site/index.html` | 6 `pu-shd` references in the landing page's endpoint list |
-| `.github/workflows/verify_published_feed.yml` | The `SITE_BASE_URL` default |
+| `README.md` | Release URLs, Pages URLs, the custom-domain instructions, the local verify command, the `SITE_BASE_URL` row in the configuration reference |
+| `site/index.html` | Six links in the landing page's endpoint list, including the visible repository name |
+| `.github/workflows/verify_published_feed.yml` | The `SITE_BASE_URL` inline default — the one that decides what the watchdog checks when no variable is set |
 | `copilot-instructions.md` | The canonical-repository statements |
-| `src/verify_published_feed.py`, `src/notify_missing_titles.py` | `USER_AGENT` — **fixed**: was advertising the upstream `pu-orfe/upcoming`, now names `pu-shd/mae-upcoming`. This is the string MAE's server admins see when tracing traffic, so re-point it at `jaddo/mae-upcoming` on transfer |
-| `tests/test_verify_published_feed.py`, `tests/test_notify_missing_titles.py` | `REPO` / `BASE_URL` / `ICS_URL` fixtures — **fixed**: were ORFE's, now MAE's. Test-local, so cosmetic |
+| `src/verify_published_feed.py`, `src/notify_missing_titles.py` | `USER_AGENT`. This is the string MAE's server admins see when tracing traffic, so it should name the repository actually making the requests |
+| `tests/test_verify_published_feed.py`, `tests/test_notify_missing_titles.py` | `REPO` / `BASE_URL` fixtures. Test-local, so cosmetic |
+| `.github/CODEOWNERS` | `@jaddo` on everything, plus the four files where the ORFE/MAE inversion gets decided |
+
+The pipeline reads none of these from its own URLs, which is why the sweep is
+safe to do ahead of a transfer: the only thing that cares is
+`verify_published_feed.yml`, and the repository variable overrides it until the
+destination exists.
 
 Keep `README.md`, `copilot-instructions.md` and this file in agreement — they
 are the three places a newcomer looks, and a stale one of the three is worse
