@@ -154,8 +154,18 @@ Two things hop 1 changed that are worth knowing before hop 2:
       releases, Pages, and a `Verify Published Feed` run reporting `match`.
 - [ ] Dispatch `ICS to JSON` with `force: true` and confirm a fresh
       `events.json` reaches both the release and Pages.
+- [ ] Check the four repository settings under [Settings to check the moment
+      the transfer is accepted](#settings-to-check-the-moment-the-transfer-is-accepted).
+      The outgoing owner cannot do this; admin left with the transfer.
 - [ ] Tell anyone consuming the **Pages** URL directly. See below — this is the
-      one that does not fail loudly.
+      one that does not fail loudly. It is also the only item on this list that
+      no amount of configuration can cover: it is a person telling other people,
+      and the outgoing owner is the one who knows who they are.
+- [ ] Decide whether the outgoing owner keeps useful access. A transfer leaves
+      them as a collaborator, apparently at `write`, which is enough to fix
+      files through a pull request but not settings. Granting `admin` is a
+      one-click choice for the new owner and makes the first weeks easier; so is
+      declining to.
 - [ ] Update this file's "Current status" table and move Jeff into "Outgoing
       owner" only when the *next* handover happens.
 
@@ -202,6 +212,27 @@ The cost of that ordering is a window — while hop 2 is pending, the published
 landing page links to `jaddo` URLs that do not resolve yet. That was the
 accepted trade: a short spell of dead links, against the risk of not being able
 to fix the URLs at all.
+
+### Settings to check the moment the transfer is accepted
+
+These are repository *settings*, not files. They were all correct immediately
+before the transfer — the values below were read from the API during the
+pending window — but settings are the part of a transfer that can be
+re-evaluated against the new owner's account defaults, and only the new owner
+can change them.
+
+| Setting | Value before transfer | Symptom if it comes out wrong |
+|---|---|---|
+| Workflow token permissions | `write` | **The one that fails loudest and least obviously.** Every workflow here declares `permissions: contents: write` (plus `issues`, `pages`, `id-token`), but the repository setting is a *ceiling*, not a default. If it lands on read-only, the declared permissions are denied and the pipeline fails at the publish step with a `403` — after successfully fetching and transforming the feed. Settings → Actions → General → Workflow permissions |
+| Actions enabled | `enabled`, `allowed_actions: all` | Nothing runs at all, which at least announces itself |
+| `github-pages` environment | present | The Pages deploy job fails; the release still publishes, so the site silently stops updating while the feed keeps moving |
+| Branch protection on `main` | none | No change in behaviour. `CODEOWNERS` suggests reviewers; nothing enforces them. Worth adding only if this stops being a one-maintainer project |
+
+A read-only token ceiling is worth dwelling on because of *where* it breaks. The
+ICS fetch, the transform, the enrichment and the schema validation all succeed;
+the failure is at the end, publishing the release. So the symptom is a red run
+whose logs look fine for ninety per cent of their length, and the site simply
+stops updating.
 
 ### While hop 2 is pending
 
