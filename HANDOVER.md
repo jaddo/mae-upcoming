@@ -125,8 +125,8 @@ transfer, which is permitted and which Jeff accepts.
       `pubino.github.io/mae-upcoming` with `events.json` matching the release
       asset.
 - [x] `SITE_BASE_URL` set, because it was unset and the workflow default named
-      the `pu-shd` host that had just stopped serving. Left pointing at
-      `pubino` so the watchdog stays green while hop 2 is pending.
+      the `pu-shd` host that had just stopped serving. It now names the
+      destination, `jaddo.github.io/mae-upcoming`.
 - [x] URLs in this repository retargeted to `jaddo` ahead of hop 2, on purpose
       — see [Why the URLs were changed first](#why-the-urls-were-changed-first).
 
@@ -143,11 +143,13 @@ Two things hop 1 changed that are worth knowing before hop 2:
 - [ ] Jeff reads this file and the README's "How MAE differs from ORFE".
 - [ ] Initiate the transfer. It sits pending until `@jaddo` accepts; GitHub
       requires the destination account to accept an incoming repository.
-- [ ] **Delete the `SITE_BASE_URL` variable** once Pages is live at
-      `jaddo.github.io/mae-upcoming`. The workflow default now names that host,
-      so deleting the variable is what makes the default take effect. Keeping a
-      variable that merely restates the default is how the two drift apart
-      later.
+- [ ] Nothing to do about `SITE_BASE_URL`. The variable already names
+      `https://jaddo.github.io/mae-upcoming`, which is also the workflow
+      default, so the watchdog is correct the moment the destination's Pages
+      site goes live — and no admin action is required of the new owner. The
+      variable is redundant with the default and may be deleted at any time by
+      whoever holds admin; if it is ever edited, remember it *overrides* the
+      default rather than agreeing with it.
 - [ ] Confirm the same list hop 1 verified: variables, workflow states,
       releases, Pages, and a `Verify Published Feed` run reporting `match`.
 - [ ] Dispatch `ICS to JSON` with `force: true` and confirm a fresh
@@ -201,6 +203,26 @@ landing page links to `jaddo` URLs that do not resolve yet. That was the
 accepted trade: a short spell of dead links, against the risk of not being able
 to fix the URLs at all.
 
+### While hop 2 is pending
+
+Two things are deliberately wrong until Jeff accepts, and both fix themselves:
+
+- **The landing page links to `jaddo` URLs that do not resolve yet**, because
+  the URLs were retargeted ahead of the transfer for the reason above.
+- **`Verify Published Feed` reports `error` / `unreachable`**, because both the
+  variable and the default now name a Pages site that does not exist yet. An
+  `error` fails the step, and two consecutive failing runs file a `feed-drift`
+  issue.
+
+That issue is expected, and it closes itself: the workflow's "Close drift issue
+once the feed matches" step runs on every successful check, so the first green
+run after the destination's Pages site goes live comments and closes it. Do not
+respond to it by editing the watchdog.
+
+The one thing worth not doing is disabling `Verify Published Feed` to silence
+the window. A disabled watchdog is how the original stale-site incident went
+unnoticed, and re-enabling it is exactly the step that gets forgotten.
+
 ## What runs, and when
 
 | Workflow | Trigger | Guard | Does |
@@ -239,7 +261,7 @@ fresh clone reproduces MAE's behaviour, and a variable overrides the default.
 | `OUTPUT_FILE` | `events.json` |
 | `ENRICH_RAW_DETAILS` | `true` |
 | `ENRICH_RAW_DETAILS_OVERWRITE` | `false` |
-| `SITE_BASE_URL` | `https://pubino.github.io/mae-upcoming` — **temporary**, delete it after hop 2 |
+| `SITE_BASE_URL` | `https://jaddo.github.io/mae-upcoming` — the destination, matching the workflow default |
 
 Everything not in that table is running on its inline default, and two of those
 defaults matter:
@@ -248,10 +270,10 @@ defaults matter:
   workflow default — which named the `pu-shd` host that had just stopped
   serving. An unreachable base URL is reported as `error`, an `error` fails the
   step, and two consecutive failing runs file a `feed-drift` issue, so this was
-  roughly an hour away from paging about a site nobody owned. The variable now
-  pins the host that actually exists during the pending window; the workflow
-  default already names `jaddo`, so **delete the variable once hop 2 lands**
-  rather than updating it.
+  roughly an hour away from paging about a site nobody owned. It now names the
+  destination, which means the watchdog is correct from the moment hop 2 lands
+  and needs no admin action afterward. The trade is that it is wrong *until*
+  then: see [While hop 2 is pending](#while-hop-2-is-pending).
 - **`BOT_BYPASS_HEADER_VALUE` is unset**, so the default `1` is what actually
   gets sent to `mae.princeton.edu`, and it works. There is no bypass token to
   hand over.
